@@ -28,14 +28,14 @@ AmpDetector : Detector{
 	specificGui {
 		EZSlider(win,200@18,"Mult",[0.01,100,\exp,0.01].asSpec,
 					   {|ez|synth.set(\mult,ez.value) },1,false,labelWidth:30,numberWidth:25);
-		controls.put(\show,NumberBox(win,30@18));
+		controls.put(\show,NumberBox(win,45@18));
 		
 	}
 	
 	detect {|net,tag|
 		bus.get({|val|
 			if(verbose){format("% :  % ",name,val).post};
-			{controls[\show].value_(val.round(1))}.defer;
+			{controls[\show].value_(val.round(0.01))}.defer;
 			net.sendMsg("/"++name,tag,val);
 		});	
 		

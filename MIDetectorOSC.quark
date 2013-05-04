@@ -1,0 +1,11 @@
+(
+	\name: "MIDetectorOSC",
+	\path: "MIDetectorOSC",
+	\version: "0.1.0",
+	\summary: "Send Musical Information via OSC to other applications in realtime.
+	Detectors for Amplitud, Frequency, FT coefficients, Power Spectra, Onsets, etc.
+	Includes examples to connect audio information to processing sketches.
+	",
+	\author: "Benjamin Sanchez Lengeling",
+	\schelp: "Tutorials/MIDetectorOSC"
+)

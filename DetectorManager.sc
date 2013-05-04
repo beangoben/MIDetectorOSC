@@ -33,7 +33,7 @@ DetectorManager {
 							});
 					  
 					  },in,labelWidth:40),
-				  tagBox:StaticText(win,75@20)
+				  tagBox:StaticText(win,100@20)
 				  .string_(format(" Detect: [ % ]",tag))
 				  
 				  );

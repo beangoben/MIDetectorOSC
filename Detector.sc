@@ -21,8 +21,8 @@ Detector{
 		}));	
 		
 		controls.put(\verbosity,
-					 Button(win,20@20)
-					 .states_([["msg?",Color.black,Color.green],["msg?",Color.black,Color.red]])
+					 Button(win,40@20)
+					 .states_([["Post",Color.black,Color.green],["Post",Color.black,Color.red]])
 					 .value_(value.binaryValue)
 					 .action_({|butt|
 			verbose=butt.value.booleanValue;
