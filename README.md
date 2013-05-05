@@ -8,28 +8,22 @@ Ideally you would run the detector in SC and relay the info to your favorite pro
 
 How to install and use
 -------------------------
-<ol>
-<li>git clone to the to the Supercollider/quarks folder, typically this is
-<ul>
-  <li> Linux:  ~/.local/share/SuperCollider/</li>
-  <li>MacOSX: ~/Library/Application\ Support/SuperCollider/ </li>
-  <li>Windows: C:\Users\UserName\SuperCollider\</li>
-</ul>
-So this would be...
-<br>
-<code>
-cd folder
-</code>
-<br>
-<code>
-git clone https://github.com/beangoben/MIDetectorOSC.git
-</code>
 
-</li>
-<li>Copy MIDetectorOSC.quark to the Supercollider/quarks/DIRECTORY folder.</li>
-<li>You can now install via Quarks.gui.</li>
-<li>Checkout the MIDetectorOSC guide/overview helpfile.</li>
-</ol>
+1.  Clone to the to the Supercollider/quarks folder, typically this is
+  * Linux:  ~/.local/share/SuperCollider/
+  * MacOSX: ~/Library/Application\ Support/SuperCollider/
+  * Windows: C:\Users\UserName\SuperCollider\
+
+  So this would be...
+
+    <pre><code>cd folder  
+    git clone https://github.com/beangoben/MIDetectorOSC.git
+    </code></pre>
+    
+2.  Copy MIDetectorOSC.quark to the Supercollider/quarks/DIRECTORY folder.
+3.  You can now install via Quarks.gui.
+4.  Checkout the MIDetectorOSC guide/overview helpfile.
+
 
 
 Wish/Todo-list:
