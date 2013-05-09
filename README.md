@@ -31,10 +31,8 @@ How to install and use
 Wish/Todo-list:
 -------------------------
 
-* Solve FIFO errors (these appear after 1 or 2 hours running).
-* Correct ON/OFF button.
+* Solve FIFO errors (these appear after 1 or 2 hours running)..
 * Correct Multi-Channel Tagging.
-* Integrate the Net part to the Manager.
 * Generalize SynthDef creation for N-channels.
 * More detectors: FFTbins, FFT Centroids, Specialized Onset Detectors.
 * Make awesome documentation and examples with processing.
