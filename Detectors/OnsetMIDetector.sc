@@ -5,7 +5,7 @@ OnsetMIDetector : MIDetector{
 	}	
 	
 	init {
-		name=\onset;
+		name="Onset";
 		nBus=1;
 		bus=Bus.control(Server.default,nBus);	
 		value=0;

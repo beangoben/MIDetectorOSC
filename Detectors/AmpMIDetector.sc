@@ -1,11 +1,11 @@
-AmpMIDetector : Detector{
+AmpMIDetector : MIDetector{
 	
 	*new{|win,in|
 		^super.newCopyArgs(win,in).init();	
 	}	
 	
 	init {
-		name=\amp;
+		name="Amp";
 		nBus=1;
 		bus=Bus.control(Server.default,nBus);	
 		value=0;

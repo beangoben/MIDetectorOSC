@@ -7,7 +7,7 @@ MIDetector{
 	}
 	
 	genericGui{
-		StaticText(win,40@18).string_(name+" : ");
+		StaticText(win,50@18).string_(name);
 		controls.put(\onOff,
 					 Button(win,20@20)
 					 .states_([["->",Color.white,Color.green],["||",Color.black,Color.red]])
@@ -21,12 +21,11 @@ MIDetector{
 		}));	
 		
 		controls.put(\verbosity,
-					 Button(win,40@20)
-					 .states_([["Post",Color.black,Color.green],["Post",Color.black,Color.red]])
-					 .value_(value.binaryValue)
-					 .action_({|butt|
+			Button(win,40@20)
+			.states_([["Post",Color.black,Color.green],["Post",Color.black,Color.red]])
+			.value_(value.binaryValue)
+			.action_({|butt|
 			verbose=butt.value.booleanValue;
-			
 		}));		
 		
 	}

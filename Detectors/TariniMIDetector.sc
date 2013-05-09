@@ -5,7 +5,7 @@ TariniMIDetector : MIDetector{
 	}	
 	
 	init {
-		name=\tarini;
+		name="Tarini";
 		nBus=1;
 		bus=Bus.control(Server.default,nBus);	
 		value=0;

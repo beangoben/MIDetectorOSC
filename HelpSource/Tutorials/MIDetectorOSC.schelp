@@ -19,47 +19,21 @@ s.boot;
 
 // First run this code
 (
-var win,types,initialTag,tag,tempo,nChannel,detectors,in,mainControls,msgRate,inChannel;
+var types,tags,nChannel,msgRate,channels;
 // net adress to send OSC Messages
 ~net = NetAddr("127.0.0.1",32000);
 // How fast do you want the messages?
 msgRate=30;
-tempo=TempoClock.new(msgRate);
 // Channel to listen?
-inChannel=0;
+channels=[0,1];
 //Tagging variable
-initialTag=0;
+tags=[0,1];
 //Detector to use
-types=[\amp,\freq,\onset];
-//Number of channels to listen
-nChannel=2;
-
-// Create Window first
-win = Window.new("Detector",Rect(128, 90, 400, 200)).front;
-win.view.decorator = FlowLayout( win.view.bounds,10@10, 4@4);
-win.onClose_({
-
-		});
-// Create net adrress stuff
-mainControls= (
-netbox:StaticText(win,200@20)
-.string_(format("IP:  %   Port:  %  ",~net.ip,~net.port)),
-makeNet:
-Button(win,60@20)
-		.states_([
-			["Update",Color.white,Color.black]
-			])
-		.action_({|butt|
-			mainControls[\netbox].string=format("IP:  %   Port:  %  ",~net.ip,~net.port);
-		})
-);
+types=["Amp","Pitch","Onset"];
 
 // create the detector manager
-
-DetectorManager.new(win,types,initialTag,msgRate,~net,inChannel);
-
+MIDetectorManager.new(nil,types,msgRate,~net,channels,tags);
 )
-
 
 //Try it out with this sound
 x={Decay2.ar(Impulse.ar(2),0.01,0.5)*SinOsc.ar(LFNoise0.kr(2).range(20,1500))}.play
