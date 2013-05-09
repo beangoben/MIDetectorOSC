@@ -1,18 +1,21 @@
 AmpMIDetector : MIDetector{
 	
-	*new{|win,in,args|
-		^super.newCopyArgs(win,in).init(args);	
+	*new{|win,in=0,args=nil|
+		^super.newCopyArgs(win,in,args).init();	
 	}	
 	
-	init {|args|
-		this.initValues(args);
+	init {
+		this.initValues();
 		super.init();
 		this.loadSynthDef();
 		super.makeGenericGui();
 		this.makeSpecificGui();
 	}
 
-	initValues {|args|
+	initValues {
+		//create default values if not present
+		if(args.isNil,{args=[]});
+		this.checkArg(\mult,1.0);
 		name="Amp";
 		nBus=1;
 		bus=Bus.control(Server.default,nBus);	
@@ -32,7 +35,7 @@ AmpMIDetector : MIDetector{
 	makeSpecificGui {
 		EZSlider(win,200@18,"Mult",[0.01,100,\exp,0.01].asSpec,
 			{|ez|synth.set(\mult,ez.value) }
-			,1,false,labelWidth:30,numberWidth:25);
+			,this.getArgValue(\mult),false,labelWidth:30,numberWidth:25);
 		controls.put(\show,NumberBox(win,45@18));
 
 		win.setInnerExtent(win.bounds.width,win.bounds.height+24);

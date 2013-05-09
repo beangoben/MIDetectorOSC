@@ -1,9 +1,9 @@
 MIDetector{
-	var win,<>in;
+	var win,<>in,args;
 	var controls,synth,bus,nBus,gui,verbose,value,<on;
 	var oscstr,name,synthname;
 	var detectFunc;
-	
+
 	*new{
 		^super.new;	
 	}
@@ -16,7 +16,7 @@ MIDetector{
 	}
 
 	makeGenericGui{
-		StaticText(win,50@18).string_(name);
+		StaticText(win,50@18).string_(oscstr);
 		controls.put(\onOff,
 			Button(win,20@20)
 			.states_([["->",Color.white,Color.green],["||",Color.black,Color.red]])
@@ -25,7 +25,7 @@ MIDetector{
 				value=butt.value.booleanValue;
 				on=(butt.value==1);
 				if(on,
-					{synth=Synth(synthname,[\in,in,\bus,bus,addAction:\addToTail])},
+					{synth=Synth(synthname,[\in,in,\bus,bus,addAction:\addToTail]++args)},
 					{synth.free}
 				);
 			})
@@ -48,4 +48,17 @@ MIDetector{
 	kill {	
 		bus.free;	
 	}
+
+	checkArg {|name,value|
+		if(args.includes(name),
+			nil,
+			{args=args++[name,value]}
+			);
+	}
+
+	getArgValue {|name|
+		var tempindx=args.detectIndex({ arg item, i; item==name });
+		^ args[tempindx+1] 
+	}
+
 } 

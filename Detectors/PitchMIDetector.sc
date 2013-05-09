@@ -1,18 +1,20 @@
 PitchMIDetector : MIDetector{
 	
-	*new{|win,in,args|
-		^super.newCopyArgs(win,in).init(args);	
+	*new{|win,in=0,args=nil|
+		^super.newCopyArgs(win,in,args).init();	
 	}	
 	
-	init {|args|
-		this.initValues(args);
+	init {
+		this.initValues();
 		super.init();
 		this.loadSynthDef();
 		super.makeGenericGui();
 		this.makeSpecificGui();
 	}
 
-	initValues {|args|
+	initValues {
+		//create default values if not present
+		if(args.isNil,{args=[]});
 		name="Pitch";
 		nBus=1;
 		bus=Bus.control(Server.default,nBus);	
