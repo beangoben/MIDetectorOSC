@@ -6,6 +6,8 @@ Supercollider extension Quark-wannabe for relaying Music Information via OSC.
 The main motivation behind this quark is to have connect visual interactions with sound interactions via OSC Messaging.
 Ideally you would run the detector in SC and relay the info to your favorite program like Processing, OF, Cinder, etc.
 
+Currently olny supports 1 channel detection per Manager.
+
 How to install and use
 -------------------------
 
