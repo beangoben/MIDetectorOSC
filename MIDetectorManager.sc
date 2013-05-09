@@ -3,7 +3,7 @@ MIDetectorManager {
 	var tempo,detectors,controls,on;
 	
 	
-	*new{|win,types,rate=60,net,in=0,tag|
+	*new{|win=nil,types=nil,rate=60,net=nil,in=0,tag=0|
 		^super.newCopyArgs(win,net,in,tag).init(types,rate)
 	}	
 	
@@ -12,24 +12,23 @@ MIDetectorManager {
 		on=false;
 		detectors=();
 		controls=();
-		if(tag.isNil,tag=in);
-		if(net.isNil,net=NetAddr("127.0.0.1",12000));
+		if(net.isNil,{net=NetAddr("127.0.0.1",12000)});
+
 		//create a TempoClock for our Osc-sending loop
 		tempo=TempoClock.new(rate);	
 		// Create window if not given
-		if(win.isNil,
-			nil,
-			this.makeWindow()
-		);
+		if(win.isNil,{this.makeWindow()});
         // GUI
         this.makeNetGui();
         this.makeMainGui();
 		// Create Detectors if an array with types is given
 		if(types.isNil,
 			nil,
-			types.do({|item|
-				this.addDetector(item,nil)
-			})
+			{
+				types.do({|item|
+					this.addDetector(item,nil)
+				})
+			}
 		);
 		
 		this.run;
@@ -66,7 +65,7 @@ MIDetectorManager {
 		var classTmp;
 		classTmp=(type++"MIDetector").asSymbol.asClass;
 
-		if( (classTmp.notNil) && classTmp.superclass == MIDetector ,
+		if( (classTmp.notNil) && (classTmp.superclass == MIDetector) ,
 			{
 			detectors.put(type,classTmp.new(win,in,args));
 			win.view.decorator.nextLine;
@@ -115,12 +114,13 @@ MIDetectorManager {
 	}	
 	
 	kill {
+		detectors.do({|item|
+			item.kill();	
+		});
 		tempo.clear;
 		tempo.stop;	
 		controls[\onOff].valueAction_(0);
-		detectors.do({|item|
-			item.kill;	
-		});
+
 	}
 	
 	
