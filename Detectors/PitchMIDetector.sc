@@ -1,32 +1,37 @@
 PitchMIDetector : MIDetector{
 	
-	*new{|win,in|
-		^super.newCopyArgs(win,in).init();	
+	*new{|win,in,args|
+		^super.newCopyArgs(win,in).init(args);	
 	}	
 	
-	init {
+	init {|args|
+		this.initValues(args);
+		super.init();
+		this.loadSynthDef();
+		super.makeGenericGui();
+		this.makeSpecificGui();
+	}
+
+	initValues {|args|
 		name="Pitch";
 		nBus=1;
 		bus=Bus.control(Server.default,nBus);	
 		value=0;
-		verbose=false;
-		on=false;
-		controls=();
-		
-		SynthDef(\PitchMIDetect,{|in=0,gate=1,bus,freqi=30|
+	}
+
+	loadSynthDef {
+		synthname=name++"MIDetect";
+		SynthDef(synthname,{|in=0,gate=1,bus|
 		var sig,freq,hasFreq;
 		sig=InFeedback.ar(in);
-		# freq, hasFreq = Pitch.kr(sig,minFreq:20,maxFreq:19000,execFreq:200);
+		# freq, hasFreq = Pitch.kr(sig,minFreq:20,maxFreq:19000);
 		Out.kr(bus,hasFreq*freq)
 		}).load(Server.default);
-		
-		super.genericGui();
-		this.specificGui();
-		
 	}
-	
-	specificGui{
+
+	makeSpecificGui{
 		controls.put(\show,NumberBox(win,60@18));
+		win.setInnerExtent(win.bounds.width,win.bounds.height+24);
 	}
 	
 	detect {|net,tag|
@@ -34,7 +39,7 @@ PitchMIDetector : MIDetector{
 			if(verbose){format("% :  % ",name,val).post};
 			{
 				controls[\show].value_(val.round(1))}.defer;
-				if(val > 0 ){net.sendMsg("/"++name,tag,val)}
+				if(val > 0 ){net.sendMsg(oscstr,tag,val)}
 			}
 		);	
 		

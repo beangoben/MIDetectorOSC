@@ -3,30 +3,32 @@ MIDetectorManager {
 	var tempo,detectors,controls,on;
 	
 	
-	*new{|win,types,rate,net,in,tag|
+	*new{|win,types,rate=60,net,in=0,tag|
 		^super.newCopyArgs(win,net,in,tag).init(types,rate)
 	}	
 	
 	init {|types,rate|
 		// Initialize stuff
-		on=true;
+		on=false;
 		detectors=();
 		controls=();
+		if(tag.isNil,tag=in);
+		if(net.isNil,net=NetAddr("127.0.0.1",12000));
 		//create a TempoClock for our Osc-sending loop
 		tempo=TempoClock.new(rate);	
 		// Create window if not given
 		if(win.isNil,
 			nil,
-			this.makeWindow
+			this.makeWindow()
 		);
         // GUI
-        this.makeNetGui;
-        this.makeMainGui;
+        this.makeNetGui();
+        this.makeMainGui();
 		// Create Detectors if an array with types is given
 		if(types.isNil,
 			nil,
 			types.do({|item|
-				this.addDetector(item)
+				this.addDetector(item,nil)
 			})
 		);
 		
@@ -35,21 +37,13 @@ MIDetectorManager {
 	}
 	
 	makeWindow {
-		win = Window.new("MIDetectorManager",Rect(128, 90, 400, 200)).front;
+		win = Window.new("MIDetectorManager",Rect(128, 90, 400, 64)).front;
 		win.view.decorator = FlowLayout( win.view.bounds,10@10, 4@4);
-		win.onClose_({ });
+		win.onClose_({ this.kill });
 	}
 
 	makeNetGui {
-		controls.put(\netupdate,
-			Button(win,60@20)
-			.states_([
-            ["Update",Color.white,Color.black]
-            ])
-            .action_({|butt|
-            controls[\netbox].string=format("IP:  %   Port:  %  ",net.ip,net.port);
-            })
-		);
+
 		controls.put(\netbox,
 			StaticText(win,180@20)
 			.string_(format("IP:  %   Port:  %  ",net.ip,net.port))
@@ -61,15 +55,25 @@ MIDetectorManager {
 		);
 		win.view.decorator.nextLine;
 	}
+	//update NetAddr
+	setNetAddr {|net|
+		this.net=net;
+		controls[\netbox].string=format("IP:  %   Port:  %  ",net.ip,net.port);
+	}
 
-	addDetector {|type|
-		switch (type,
-				"Amp", { detectors.put(type,AmpMIDetector(win,in))},
-				"Pitch", {detectors.put(type,PitchMIDetector(win,in))},
-				"Onset",  {detectors.put(type,OnsetMIDetector(win,in))},
-				{ format("MIDetector Error: Could not find detector %s",type).postln;}
-				);
-		win.view.decorator.nextLine;
+	addDetector{|type,args|
+
+		var classTmp;
+		classTmp=(type++"MIDetector").asSymbol.asClass;
+
+		if( (classTmp.notNil) && classTmp.superclass == MIDetector ,
+			{
+			detectors.put(type,classTmp.new(win,in,args));
+			win.view.decorator.nextLine;
+			},
+			{format("MIDetector: Could not find detector % !",type).error; }
+			);
+		
 	}
 
 	makeMainGui {

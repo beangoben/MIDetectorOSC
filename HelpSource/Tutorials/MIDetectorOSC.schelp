@@ -17,22 +17,38 @@ EXAMPLES::
 CODE::
 s.boot;
 
-// First run this code
+// Here we present 3 ways of instanciating a MIDetectorManager
+// 1) Here we use all the arguments
 (
-var types,tags,nChannel,msgRate,channels;
+var types,tags,nChannel,msgRate,channel;
 // net adress to send OSC Messages
-~net = NetAddr("127.0.0.1",32000);
+~net = NetAddr("127.0.0.1",12000);
 // How fast do you want the messages?
 msgRate=30;
 // Channel to listen?
-channels=[0,1];
+channel=0;
 //Tagging variable
-tags=[0,1];
+tags=0;
 //Detector to use
 types=["Amp","Pitch","Onset"];
-
 // create the detector manager
-MIDetectorManager.new(nil,types,msgRate,~net,channels,tags);
+MIDetectorManager.new(nil,types,msgRate,~net,channel,tags);
+)
+// 2) Olny passing the net adress
+(
+var types;
+// net adress to send OSC Messages
+~net = NetAddr("127.0.0.1",32000);
+//Detector to use
+types=["Pitch"];
+a=MIDetectorManager.new(types:types,net:~net);
+)
+// 3) Using all the default values
+(
+a=MIDetectorManager.new();
+a.addDetector("Pitch");
+a.addDetector("Onset");
+a.addDetector("Amp");
 )
 
 //Try it out with this sound
