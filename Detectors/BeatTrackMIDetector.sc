@@ -1,4 +1,4 @@
-OnsetMIDetector : MIDetector{
+BeatTrackMIDetector : MIDetector{
 	
 	*new{|win,in=0,tag=0,args=nil|
 		^super.newCopyArgs(win,in,tag,args).init();	
@@ -15,24 +15,24 @@ OnsetMIDetector : MIDetector{
 	initValues {
 		//create default values if not present
 		if(args.isNil,{args=[]});
-		this.checkArg(\tol,0.15);
-		name="Onset";
-		nBus=1;
+		this.checkArg(\lock,0.0);
+		name="BeatTrack";
+		nBus=4;
 		bus=Bus.control(Server.default,nBus);	
 		value=0;
 	}
 
 	loadSynthDef {
 		synthname=name++"MIDetect";
-		SynthDef(synthname,{|in=0,gate=1,tol=0.15,amp=0,bus|
-			var sig,buffer,chain,onsets,pips,counter;
+		SynthDef(synthname,{|in=0,gate=1,lock=0.0,amp=0,bus|
+			var sig,buffer,chain,pips,quartertick, eighthtick, sixteenthtick, tempo;
 			buffer=LocalBuf(1024);
 			sig=InFeedback.ar(in);
 			chain = FFT(buffer, sig);
-			onsets= Onsets.kr(chain, tol, \rcomplex);
-			pips = WhiteNoise.ar(EnvGen.kr(Env.perc(0.001, 0.1, 0.2), onsets));
+			#quartertick, eighthtick, sixteenthtick, tempo = BeatTrack.kr(sig,lock);
+			pips =  Mix.ar(SinOsc.ar([220,880,3520],0.0,Decay.kr([quartertick, eighthtick, sixteenthtick],[0.1,0.05,0.025])));
 			Out.ar(in,pips*amp);
-			Out.kr(bus,In.kr(bus)+onsets);
+			Out.kr(bus,[quartertick, eighthtick, sixteenthtick, tempo])
 		}).load(Server.default);
 	}
 
@@ -45,19 +45,19 @@ OnsetMIDetector : MIDetector{
 				synth.set(\amp,butt.value)
 			});
 
-		EZSlider(win,220@18,"tol",[0,1,\lin].asSpec,
-			{|ez|synth.set(\tol,ez.value) },
-			this.getArgValue(\tol),false,labelWidth:25,numberWidth:35);
+		Button(win,60@20).states_([["Free"],["Locked"]])
+			.value_(0)
+			.action_({|butt|
+				synth.set(\lock,butt.value)
+			});
 
 		win.setInnerExtent(win.bounds.width,win.bounds.height+24);
 	}
 	
 	detect {|net|
-		bus.get({|val|
-			if(val > 0){
-				if(verbose){format("%!",name).postln};
-				net.sendMsg(oscstr,tag);
-				bus.set(0)};
+		bus.getn(nBus,{|val|
+			if(verbose){format("%: %",name,val).postln};
+			net.sendMsg(oscstr,tag,val[0],val[1],val[2],val[3]);
 		});	
 		
 	}

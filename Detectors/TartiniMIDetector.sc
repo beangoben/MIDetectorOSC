@@ -1,4 +1,4 @@
-PitchMIDetector : MIDetector{
+TartiniMIDetector : MIDetector{
 	
 	*new{|win,in=0,tag=0,args=nil|
 		^super.newCopyArgs(win,in,tag,args).init();	
@@ -15,7 +15,7 @@ PitchMIDetector : MIDetector{
 	initValues {
 		//create default values if not present
 		if(args.isNil,{args=[]});
-		name="Pitch";
+		name="Tartini";
 		nBus=1;
 		bus=Bus.control(Server.default,nBus);	
 		value=0;
@@ -26,7 +26,7 @@ PitchMIDetector : MIDetector{
 		SynthDef(synthname,{|in=0,gate=1,bus|
 		var sig,freq,hasFreq;
 		sig=InFeedback.ar(in);
-		# freq, hasFreq = Pitch.kr(sig,minFreq:20,maxFreq:19000);
+		# freq, hasFreq = Tartini.kr(sig);
 		Out.kr(bus,hasFreq*freq)
 		}).load(Server.default);
 	}

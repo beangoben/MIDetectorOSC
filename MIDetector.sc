@@ -1,5 +1,5 @@
 MIDetector{
-	var win,<>in,args;
+	var win,<>in,tag,args;
 	var controls,synth,bus,nBus,gui,verbose,value,<on;
 	var oscstr,name,synthname;
 	var detectFunc;
@@ -16,7 +16,7 @@ MIDetector{
 	}
 
 	makeGenericGui{
-		StaticText(win,50@18).string_(oscstr);
+		StaticText(win,140@18).string_(format("%: %->%",oscstr,in,tag));
 		controls.put(\onOff,
 			Button(win,20@20)
 			.states_([["->",Color.white,Color.green],["||",Color.black,Color.red]])

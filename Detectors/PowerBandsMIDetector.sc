@@ -1,7 +1,7 @@
-PowerMIDetector : MIDetector{
+PowerBandsMIDetector : MIDetector{
 	
-	*new{|win,in=0,args=nil|
-		^super.newCopyArgs(win,in,args).init();	
+	*new{|win,in=0,tag=0,args=nil|
+		^super.newCopyArgs(win,in,tag,args).init();	
 	}	
 	
 	init {
@@ -21,7 +21,7 @@ PowerMIDetector : MIDetector{
 		this.checkArg(\mult,1.0);
 		this.checkArg(\scalemode,2);
 
-		name="Power";
+		name="PowerBands";
 		nBus=this.getArgValue(\nbands);
 		bus=Bus.control(Server.default,nBus);	
 		value=0;
@@ -63,7 +63,7 @@ PowerMIDetector : MIDetector{
 		controls.put(\mult,
 			EZSlider(win,225@18,"Mult",[0.01,100,\exp,0.01].asSpec,
 			{|ez|synth.set(\mult,ez.value) }
-			,this.getArgValue(\mult),false,labelWidth:30,numberWidth:25)
+			,this.getArgValue(\mult),false,labelWidth:30,numberWidth:35)
 		);
 
 		controls.put(\showsum,EZNumber(win,125@18,"Sum:"));
@@ -71,10 +71,10 @@ PowerMIDetector : MIDetector{
 		win.setInnerExtent(win.bounds.width,win.bounds.height+(24*3));
 	}
 	
-	detect {|net,tag|
+	detect {|net|
 		bus.getn(nBus,{|val|
 			val=val.max(0).min(1); //limit range
-			if(verbose){format("% :  % ",name,val).post};
+			if(verbose){format("% :  % ",name,val).postln};
 			{
 				controls[\show].value_(val);
 				controls[\showsum].value_(val.sum);

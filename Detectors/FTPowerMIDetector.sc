@@ -1,4 +1,4 @@
-PitchMIDetector : MIDetector{
+FTPowerMIDetector : MIDetector{
 	
 	*new{|win,in=0,tag=0,args=nil|
 		^super.newCopyArgs(win,in,tag,args).init();	
@@ -15,7 +15,8 @@ PitchMIDetector : MIDetector{
 	initValues {
 		//create default values if not present
 		if(args.isNil,{args=[]});
-		name="Pitch";
+		this.checkArg(\mult,1.0);
+		name="FTPower";
 		nBus=1;
 		bus=Bus.control(Server.default,nBus);	
 		value=0;
@@ -23,25 +24,31 @@ PitchMIDetector : MIDetector{
 
 	loadSynthDef {
 		synthname=name++"MIDetect";
-		SynthDef(synthname,{|in=0,gate=1,bus|
-		var sig,freq,hasFreq;
+		SynthDef(synthname,{|in=0,gate=1,mult=1,bus|
+		var sig,power,chain;
 		sig=InFeedback.ar(in);
-		# freq, hasFreq = Pitch.kr(sig,minFreq:20,maxFreq:19000);
-		Out.kr(bus,hasFreq*freq)
+		chain = FFT(LocalBuf(2048,1), sig);
+		power = FFTPower.kr(chain);
+		Out.kr(bus,power*mult)
 		}).load(Server.default);
 	}
 
 	makeSpecificGui{
+		EZSlider(win,200@18,"Mult",[0.01,100,\exp,0.01].asSpec,
+			{|ez|synth.set(\mult,ez.value) }
+			,this.getArgValue(\mult),false,labelWidth:30,numberWidth:25);
+
 		controls.put(\show,NumberBox(win,60@18));
 		win.setInnerExtent(win.bounds.width,win.bounds.height+24);
 	}
 	
 	detect {|net|
 		bus.get({|val|
-			if(verbose){format("% :  % ",name,val).postln};
+			if(verbose){format("% : %  ",name,val).postln};
 			{
-				controls[\show].value_(val.round(1))}.defer;
-				if(val > 0 ){net.sendMsg(oscstr,tag,val)}
+			controls[\show].value_(val.round(0.01));
+			}.defer;
+			net.sendMsg(oscstr,tag,val)
 			}
 		);	
 		

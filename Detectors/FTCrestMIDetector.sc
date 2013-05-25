@@ -1,4 +1,4 @@
-PitchMIDetector : MIDetector{
+FTCrestMIDetector : MIDetector{
 	
 	*new{|win,in=0,tag=0,args=nil|
 		^super.newCopyArgs(win,in,tag,args).init();	
@@ -15,7 +15,7 @@ PitchMIDetector : MIDetector{
 	initValues {
 		//create default values if not present
 		if(args.isNil,{args=[]});
-		name="Pitch";
+		name="FTCrest";
 		nBus=1;
 		bus=Bus.control(Server.default,nBus);	
 		value=0;
@@ -24,10 +24,11 @@ PitchMIDetector : MIDetector{
 	loadSynthDef {
 		synthname=name++"MIDetect";
 		SynthDef(synthname,{|in=0,gate=1,bus|
-		var sig,freq,hasFreq;
+		var sig,crest,chain;
 		sig=InFeedback.ar(in);
-		# freq, hasFreq = Pitch.kr(sig,minFreq:20,maxFreq:19000);
-		Out.kr(bus,hasFreq*freq)
+		chain = FFT(LocalBuf(2048,1), sig);
+		crest = FFTCrest.kr(chain);
+		Out.kr(bus,crest.log)
 		}).load(Server.default);
 	}
 
@@ -38,10 +39,11 @@ PitchMIDetector : MIDetector{
 	
 	detect {|net|
 		bus.get({|val|
-			if(verbose){format("% :  % ",name,val).postln};
+			if(verbose){format("% : %  ",name,val).postln};
 			{
-				controls[\show].value_(val.round(1))}.defer;
-				if(val > 0 ){net.sendMsg(oscstr,tag,val)}
+				controls[\show].value_(val.round(0.01));
+			}.defer;
+			net.sendMsg(oscstr,tag,val)
 			}
 		);	
 		

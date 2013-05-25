@@ -1,4 +1,4 @@
-PitchMIDetector : MIDetector{
+FTPeakMIDetector : MIDetector{
 	
 	*new{|win,in=0,tag=0,args=nil|
 		^super.newCopyArgs(win,in,tag,args).init();	
@@ -15,8 +15,8 @@ PitchMIDetector : MIDetector{
 	initValues {
 		//create default values if not present
 		if(args.isNil,{args=[]});
-		name="Pitch";
-		nBus=1;
+		name="FTPeak";
+		nBus=2;
 		bus=Bus.control(Server.default,nBus);	
 		value=0;
 	}
@@ -24,24 +24,28 @@ PitchMIDetector : MIDetector{
 	loadSynthDef {
 		synthname=name++"MIDetect";
 		SynthDef(synthname,{|in=0,gate=1,bus|
-		var sig,freq,hasFreq;
+		var sig,freqmag,chain;
 		sig=InFeedback.ar(in);
-		# freq, hasFreq = Pitch.kr(sig,minFreq:20,maxFreq:19000);
-		Out.kr(bus,hasFreq*freq)
+		chain = FFT(LocalBuf(2048,1), sig);
+		freqmag = FFTPeak.kr(chain);
+		Out.kr(bus,freqmag)
 		}).load(Server.default);
 	}
 
 	makeSpecificGui{
-		controls.put(\show,NumberBox(win,60@18));
+		controls.put(\showfreq,NumberBox(win,60@18));
+		controls.put(\showmag,NumberBox(win,60@18));
 		win.setInnerExtent(win.bounds.width,win.bounds.height+24);
 	}
 	
 	detect {|net|
-		bus.get({|val|
-			if(verbose){format("% :  % ",name,val).postln};
+		bus.getn(2,{|val|
+			if(verbose){format("% : % , % ",name,val[0],val[1]).postln};
 			{
-				controls[\show].value_(val.round(1))}.defer;
-				if(val > 0 ){net.sendMsg(oscstr,tag,val)}
+				controls[\showfreq].value_(val[0].round(1));
+				controls[\showmag].value_(val[1].round(0.01));
+			}.defer;
+			net.sendMsg(oscstr,tag,val[0],val[1])
 			}
 		);	
 		

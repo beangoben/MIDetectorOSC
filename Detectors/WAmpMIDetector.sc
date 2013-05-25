@@ -1,4 +1,4 @@
-AmpMIDetector : MIDetector{
+WAmpMIDetector : MIDetector{
 	
 	*new{|win,in=0,tag=0,args=nil|
 		^super.newCopyArgs(win,in,tag,args).init();	
@@ -16,18 +16,21 @@ AmpMIDetector : MIDetector{
 		//create default values if not present
 		if(args.isNil,{args=[]});
 		this.checkArg(\mult,1.0);
-		name="Amp";
+		this.checkArg(\winSize,1.0);
+		name="WAmp";
 		nBus=1;
 		bus=Bus.control(Server.default,nBus);	
 		value=0;
 	}
 
 	loadSynthDef {
+		var winSize;
+		winSize=this.getArgValue(\winSize);
 		synthname=name++"MIDetect";
 		SynthDef(synthname,{|in=0,gate=1,bus,mult=1|
 			var sig,ampli;
 			sig=InFeedback.ar(in);
-			ampli=Amplitude.kr(sig,0.1,0.1);
+			ampli=WAmp.kr(sig,winSize:winSize);
 			Out.kr(bus,ampli*mult)
 		}).load(Server.default);
 	}
