@@ -1,13 +1,12 @@
 MIDetectorOSC
 =============
-*Last tested on SuperCollider 3.6.3 on Ubuntu 13.04*
-Requires SC3-plugins installed.
+*Last tested on SuperCollider 3.6.5 on Ubuntu 13.04, Requires SC3-plugins installed.*
+
 
 Supercollider extension Quark-wannabe for relaying Music Information via OSC.
 The main motivation behind this quark is to have connect visual interactions with sound interactions via OSC Messaging.
 Ideally you would run the detector in SC and relay the info to your favorite program like Processing, OF, Cinder, etc.
 
-Currently olny supports 1 channel detection per Manager.
 
 How to install as a Quark
 -------------------------
