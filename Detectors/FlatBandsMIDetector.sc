@@ -18,10 +18,10 @@ FlatBandsMIDetector : MIDetector{
 		this.checkArg(\nbands,3);
 		this.checkArg(\minfreq,220);
 		this.checkArg(\maxfreq,14080);
-
 		name="FlatBands";
 		nBus=this.getArgValue(\nbands);
-		bus=Bus.control(Server.default,nBus);	
+		bus=Bus.control(Server.default,nBus);
+		[bus,nBus].postln;
 		value=0;
 	}
 
@@ -38,12 +38,12 @@ FlatBandsMIDetector : MIDetector{
 		synthname=name++"MIDetect";
 		SynthDef(synthname,{|in=0,gate=1,bus|
 			var sig,flats,chain;
-			sig=InFeedback.ar(in);
+	        sig=InFeedback.ar(in);
 			chain=FFT(LocalBuf(2048),sig);
 			flats = FFTSubbandFlatness.kr(chain,[300, 500, 1500]);
-			flats.poll;
-			Out.kr(bus, flats)
+			Out.kr(0,flats)
 		}).load(Server.default);
+
 	}
 
 	makeSpecificGui {
@@ -62,12 +62,13 @@ FlatBandsMIDetector : MIDetector{
 	
 	detect {|net|
 		bus.getn(nBus,{|val|
-			val=val.max(0).min(1); //limit range
-			if(verbose){format("% :  % ",name,val).postln};
+			val.postln;
+			//val=val.max(0).min(1); //limit range
+			//if(verbose){format("% :  % ",name,val).postln};
 			//{
 			//	controls[\show].value_(val);
 			//	}.defer;
-			net.sendMsg(oscstr,tag,nBus,val.asFloat.round(0.01));
+			//net.sendMsg(oscstr,tag,nBus,val.asFloat.round(0.01));
 			});
 		}	
 	

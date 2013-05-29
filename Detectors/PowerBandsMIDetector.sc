@@ -51,21 +51,8 @@ PowerBandsMIDetector : MIDetector{
 
 	makeSpecificGui {
 		
-		controls.put(\show,
-			MultiSliderView(win, Rect(0, 0, 256,50))
-			.value_(0.dup(nBus))
-			.size_(nBus)
-			.drawLines_(true)
-			.drawRects_(false)
-			.indexThumbSize_(256/nBus)
-		);	
-
-		controls.put(\mult,
-			EZSlider(win,225@18,"Mult",[0.01,100,\exp,0.01].asSpec,
-			{|ez|synth.set(\mult,ez.value) }
-			,this.getArgValue(\mult),false,labelWidth:30,numberWidth:35)
-		);
-
+		this.showBasicMultiSLider();
+		this.addBasicSlider(\mult,[0.01,100,\exp,0.01].asSpec);
 		controls.put(\showsum,EZNumber(win,125@18,"Sum:"));
 
 		win.setInnerExtent(win.bounds.width,win.bounds.height+(24*3));

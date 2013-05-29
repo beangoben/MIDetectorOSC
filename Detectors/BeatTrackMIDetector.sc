@@ -37,20 +37,12 @@ BeatTrackMIDetector : MIDetector{
 	}
 
 	makeSpecificGui {
-		var tmpindex;
-
-		Button(win,20@20).states_([["S"],["x"]])
-			.value_(0)
-			.action_({|butt|
-				synth.set(\amp,butt.value)
-			});
-
+		this.addSoundButton();
 		Button(win,60@20).states_([["Free"],["Locked"]])
 			.value_(0)
 			.action_({|butt|
 				synth.set(\lock,butt.value)
 			});
-
 		win.setInnerExtent(win.bounds.width,win.bounds.height+24);
 	}
 	

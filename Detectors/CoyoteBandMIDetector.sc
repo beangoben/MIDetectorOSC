@@ -1,4 +1,4 @@
-OnsetBandMIDetector : MIDetector{
+CoyoteBandMIDetector : MIDetector{
 	
 	*new{|win,in=0,tag=0,args=nil|
 		^super.newCopyArgs(win,in,tag,args).init();	
@@ -15,28 +15,32 @@ OnsetBandMIDetector : MIDetector{
 	initValues {
 		//create default values if not present
 		if(args.isNil,{args=[]});
+		this.checkArg(\thres,0.015);
+		this.checkArg(\sense,0.5);
 		this.checkArg(\freq,1200);
-		this.checkArg(\tol,0.15);
 		this.checkArg(\bw,0.25);
-		name="OnsetBand";
+		name="CoyoteBand";
 		nBus=2;
 		bus=Bus.control(Server.default,nBus);	
 		value=0;
 	}
 
 	loadSynthDef {
-		var bw;
-		bw=this.getArgValue(\bw);
+		var thres,sense,freq;
+		thres=this.getArgValue(\thres);
+		sense=this.getArgValue(\sense);
+		sense=this.getArgValue(\bw);
+		freq=this.getArgValue(\freq);
 		synthname=name++"MIDetect";
-	
-		SynthDef(synthname,{|in=0,gate=1,tol=0.15,freq=1200,amp=0,bw=0.5,bus|
-			var sig,chain,onsets,pips,filter,x,midirq;
+
+		SynthDef(synthname,{|in=0,gate=1,bw=0.25,freq=1200,amp=0,bus|
+			var sig,buffer,chain,onsets,pips,filter,midirq,x;
 			x= 2**(bw / 24.0); 
     		midirq=(x*x - 1) / x; 
+			buffer=LocalBuf(1024);
 			sig=InFeedback.ar(in);
 			filter=BBandPass.ar(sig,freq,midirq);
-			chain = FFT(LocalBuf(2048), sig);
-			onsets= Onsets.kr(chain, tol, \rcomplex);
+			onsets= Coyote.kr(sig,thres:thres,fastmul:sense);
 			pips = SinOsc.ar(freq,0,EnvGen.kr(Env.perc(0.001, 0.1, 0.2), onsets));
 			Out.ar(in,pips*amp);
 			Out.kr(bus,[In.kr(bus)+onsets,freq]);
@@ -46,7 +50,6 @@ OnsetBandMIDetector : MIDetector{
 	makeSpecificGui {
 
 		this.addSoundButton();
-		this.addBasicSlider(\tol,[0,1,\lin].asSpec);
 		this.addBasicSlider(\freq,\freq.asSpec);
 		this.addBasicSlider(\bw,[0.05,10,\exp].asSpec);
 		win.setInnerExtent(win.bounds.width,win.bounds.height+(22*2));
@@ -55,9 +58,10 @@ OnsetBandMIDetector : MIDetector{
 	detect {|net|
 		bus.getn(nBus,{|val|
 			if(val[0] > 0){
-				if(verbose){format("%! : %",name,val[1]).postln};
+				if(verbose){format("%:%!",name,val[1]).postln};
 				net.sendMsg(oscstr,tag,val[1]);
-				bus.setn([0,val[1]])};
+				bus.set([0,val[1]])
+			};
 		});	
 		
 	}

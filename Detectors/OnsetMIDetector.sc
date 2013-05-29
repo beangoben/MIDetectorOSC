@@ -37,18 +37,8 @@ OnsetMIDetector : MIDetector{
 	}
 
 	makeSpecificGui {
-		var tmpindex;
-
-		Button(win,20@20).states_([["S"],["x"]])
-			.value_(0)
-			.action_({|butt|
-				synth.set(\amp,butt.value)
-			});
-
-		EZSlider(win,220@18,"tol",[0,1,\lin].asSpec,
-			{|ez|synth.set(\tol,ez.value) },
-			this.getArgValue(\tol),false,labelWidth:25,numberWidth:35);
-
+		this.addSoundButton();
+		this.addBasicSlider(\tol,[0,1,\lin].asSpec);
 		win.setInnerExtent(win.bounds.width,win.bounds.height+24);
 	}
 	

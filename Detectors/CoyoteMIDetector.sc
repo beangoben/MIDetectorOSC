@@ -15,6 +15,8 @@ CoyoteMIDetector : MIDetector{
 	initValues {
 		//create default values if not present
 		if(args.isNil,{args=[]});
+		this.checkArg(\thres,0.015);
+		this.checkArg(\sense,0.5);
 		name="Coyote";
 		nBus=1;
 		bus=Bus.control(Server.default,nBus);	
@@ -22,12 +24,16 @@ CoyoteMIDetector : MIDetector{
 	}
 
 	loadSynthDef {
+		var thres,sense;
+		thres=this.getArgValue(\thres);
+		sense=this.getArgValue(\sense);
 		synthname=name++"MIDetect";
-		SynthDef(synthname,{|in=0,gate=1,tol=0.15,amp=0,bus|
+
+		SynthDef(synthname,{|in=0,gate=1,amp=0,bus|
 			var sig,buffer,chain,onsets,pips,counter;
 			buffer=LocalBuf(1024);
 			sig=InFeedback.ar(in);
-			onsets= Coyote.kr(sig);
+			onsets= Coyote.kr(sig,thres:thres,fastmul:sense);
 			pips = WhiteNoise.ar(EnvGen.kr(Env.perc(0.001, 0.1, 0.2), onsets));
 			Out.ar(in,pips*amp);
 			Out.kr(bus,In.kr(bus)+onsets);
@@ -35,14 +41,8 @@ CoyoteMIDetector : MIDetector{
 	}
 
 	makeSpecificGui {
-		var tmpindex;
 
-		Button(win,20@20).states_([["S"],["x"]])
-			.value_(0)
-			.action_({|butt|
-				synth.set(\amp,butt.value)
-			});
-			
+		this.addSoundButton();
 		win.setInnerExtent(win.bounds.width,win.bounds.height+24);
 	}
 	

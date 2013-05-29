@@ -41,6 +41,33 @@ MIDetector{
 		
 	}
 
+	addBasicSlider { |name,spec|
+
+		EZSlider(win,230@18,name,spec,
+			{|ez|synth.set(name,ez.value) },
+			this.getArgValue(name),false,labelWidth:35,numberWidth:45);
+
+	}
+
+	addSoundButton {
+		Button(win,20@20).states_([["S"],["x"]])
+			.value_(0)
+			.action_({|butt|
+				synth.set(\amp,butt.value)
+			});
+	}
+
+	showBasicMultiSLider{
+			controls.put(\show,
+			MultiSliderView(win, Rect(0, 0, 256,50))
+			.value_(0.dup(nBus))
+			.size_(nBus)
+			.drawLines_(true)
+			.drawRects_(false)
+			.indexThumbSize_(256/nBus)
+		);	
+	}
+
 	onOff {|val|
 		controls[\onOff].valueAction_(val);	
 	}
