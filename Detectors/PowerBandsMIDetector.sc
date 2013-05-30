@@ -24,6 +24,7 @@ PowerBandsMIDetector : MIDetector{
 		name="PowerBands";
 		nBus=this.getArgValue(\nbands);
 		bus=Bus.control(Server.default,nBus);	
+		bus.setn(0.dup(nBus));
 		value=0;
 	}
 
@@ -51,8 +52,8 @@ PowerBandsMIDetector : MIDetector{
 
 	makeSpecificGui {
 		
-		this.showBasicMultiSLider();
-		this.addBasicSlider(\mult,[0.01,100,\exp,0.01].asSpec);
+		this.showMultiSlider();
+		this.addSlider(\mult,[0.01,100,\exp,0.01].asSpec);
 		controls.put(\showsum,EZNumber(win,125@18,"Sum:"));
 
 		win.setInnerExtent(win.bounds.width,win.bounds.height+(24*3));

@@ -36,7 +36,7 @@ WAmpMIDetector : MIDetector{
 	}
 
 	makeSpecificGui {
-		this.addBasicSlider(\mult,[0.01,100,\exp,0.01].asSpec);
+		this.addSlider(\mult,[0.01,100,\exp,0.01].asSpec);
 		controls.put(\show,NumberBox(win,45@18));
 
 		win.setInnerExtent(win.bounds.width,win.bounds.height+24);

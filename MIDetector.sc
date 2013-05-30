@@ -13,6 +13,7 @@ MIDetector{
 		on=false;
 		controls=();
 		oscstr="/"++name.toLower;
+		value=0;
 	}
 
 	makeGenericGui{
@@ -41,7 +42,7 @@ MIDetector{
 		
 	}
 
-	addBasicSlider { |name,spec|
+	addSlider { |name,spec|
 
 		EZSlider(win,230@18,name,spec,
 			{|ez|synth.set(name,ez.value) },
@@ -57,7 +58,7 @@ MIDetector{
 			});
 	}
 
-	showBasicMultiSLider{
+	showMultiSlider{
 			controls.put(\show,
 			MultiSliderView(win, Rect(0, 0, 256,50))
 			.value_(0.dup(nBus))

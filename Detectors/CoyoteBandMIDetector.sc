@@ -50,8 +50,8 @@ CoyoteBandMIDetector : MIDetector{
 	makeSpecificGui {
 
 		this.addSoundButton();
-		this.addBasicSlider(\freq,\freq.asSpec);
-		this.addBasicSlider(\bw,[0.05,10,\exp].asSpec);
+		this.addSlider(\freq,\freq.asSpec);
+		this.addSlider(\bw,[0.05,10,\exp].asSpec);
 		win.setInnerExtent(win.bounds.width,win.bounds.height+(22*2));
 	}
 	

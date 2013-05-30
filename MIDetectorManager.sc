@@ -70,9 +70,9 @@ MIDetectorManager {
 		if( (classTmp.notNil) && (classTmp.superclass == MIDetector) ,
 			{
 			in.do({
-			arg item,i;
-			detectors.add(classTmp.new(win,item,tag[i],args));
-			win.view.decorator.nextLine;
+				arg item,i;
+				detectors.add(classTmp.new(win,item,tag[i],args));
+				win.view.decorator.nextLine;
 			});
 			},
 			{format("MIDetector: Could not find detector % !",type).error; }
@@ -95,15 +95,7 @@ MIDetectorManager {
 			})
 			.valueAction_(on.binaryValue)
 		);
-		/*
-		controls.put(\inbox,
-			StaticText(win,200@20)
-			.string_(format("Listening : %",in))
-		);
 
-
-		win.view.decorator.nextLine;
-		*/
 	}
 
 	run {	
