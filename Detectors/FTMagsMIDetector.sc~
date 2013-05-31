@@ -1,5 +1,5 @@
-WAmpMIDetector : MIDetector{
-	
+FTMagsMIDetector : MIDetector{
+
 	*new{|win,in=0,tag=0,args=nil|
 		^super.newCopyArgs(win,in,tag,args).init();	
 	}	
@@ -14,42 +14,45 @@ WAmpMIDetector : MIDetector{
 	}
 
 	initValues {
-		//create default values if not present
-		if(args.isNil,{args=[]});
 		this.checkArg(\mult,1.0);
-		this.checkArg(\winSize,1.0);
-		name="WAmp";
-		nBus=1;
-		bus=Bus.control(Server.default,nBus);	
-		value=0;
 		this.setSynthArg([\mult]);
+		name="FTMags";
+		nBus=1024;
+		bus=Buffer.alloc(Server.default, nBus); 
+		bus.setn(nBus,0.dup(nBus));
 	}
 
-	loadSynthDef {
+	loadSynthDef {	
 		SynthDef(synthname,{|in=0,gate=1,bus,mult=1|
-			var sig,ampli;
+			var sig,chain;
 			sig=InFeedback.ar(in);
-			ampli=WAmp.kr(sig,winSize:args[\winSize]);
-			Out.kr(bus,ampli*mult)
+			chain=FFT(LocalBuf(2048),sig);
+			chain = PV_MagBuffer(chain, bus);
 		}).load(Server.default);
 	}
 
 	makeSpecificGui {
+		this.addNormalizeButton();
 		this.addSlider(\mult,[0.01,100,\exp,0.01].asSpec);
-		controls.put(\show,NumberBox(win,45@18));
+		if(doPlot){this.addPlotter(xaxis:[20,22000,\exp].asSpec)};
+		if(doStats){this.addStats()};
 		win.setInnerExtent(win.bounds.width,win.bounds.height+hextend);
 	}
-	
+
 	detect {|nets|
-		bus.get({|val|
+		bus.getn(0,nBus,{|val|
+			if(doNormalize) {val=val.normalize};
+			//do gui related stuff here
 			{
-			controls[\show].value_(val.round(1));
+			if(doStats){this.updateStats(val)};
 			if(verbose){format("% :  % ",name,val).postln};
+			if(doPlot){
+				controls[\plot].setValue(val,findSpecs: false);
+				controls[\plot].calcSpecs;
+			};
 			}.defer;
 			//send messages
-			nets.do({|net| net.sendMsg(oscstr,tag,val) });
-		});	
+			nets.do({|net| net.sendMsg(oscstr,tag,nBus,val) });
+		 });
 	}
-	
-	
 }

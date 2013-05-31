@@ -1,10 +1,11 @@
 PowerBandsMIDetector : MIDetector{
 	
-	*new{|win,in=0,tag=0,args=nil|
+	*new{|win,in=0,tag=0,args|
 		^super.newCopyArgs(win,in,tag,args).init();	
 	}	
 	
 	init {
+		if(args.isNil,{args=()},{var tmp=();tmp.putPairs(args);args=tmp;});
 		this.initValues();
 		super.init();
 		this.loadSynthDef();
@@ -13,62 +14,59 @@ PowerBandsMIDetector : MIDetector{
 	}
 
 	initValues {
-		//create default values if not present
-		if(args.isNil,{args=[]});
-		this.checkArg(\nbands,32);
-		this.checkArg(\minfreq,220);
-		this.checkArg(\maxfreq,14080);
+		var cutfreqs,nbands;
+		if(args[\nbands].isNil){
+			if(args[\cutfreqs].isNil){nbands=32;}{nbands=args[\cutfreqs].size}
+		}{nbands=32;};
+		this.checkArg(\nbands,nbands);
 		this.checkArg(\mult,1.0);
+		this.checkArg(\spec,\freq.asSpec);
 		this.checkArg(\scalemode,2);
+		nBus=args[\nbands];
+		cutfreqs=Array.fill(nBus-1,{|i| args[\spec].map(i/(nBus-1))});
+		this.checkArg(\cutfreqs,cutfreqs);
+		this.setSynthArg([\mult]);
 
 		name="PowerBands";
-		nBus=this.getArgValue(\nbands);
 		bus=Bus.control(Server.default,nBus);	
 		bus.setn(0.dup(nBus));
-		value=0;
+
 	}
 
 	loadSynthDef {
-		var cutfreqs,maxfreq,minfreq,stepsize,scalemode;
-		//create frequencies for subbands dependinf on min and max
-		maxfreq=this.getArgValue(\maxfreq);
-		minfreq=this.getArgValue(\minfreq);
-		stepsize=(log2(maxfreq)-log2(minfreq))/(nBus-2);
-		cutfreqs=Array.fill(nBus-1,{ arg i;
-			2**(stepsize*i + log2(minfreq))
-		});
-		scalemode=this.getArgValue(\scalemode);
-
-		synthname=name++"MIDetect";
 		SynthDef(synthname,{|in=0,gate=1,bus,mult=1|
 			var buffer,sig,powers,chain;
 			buffer=LocalBuf(2048);
 			sig=InFeedback.ar(in);
 			chain=FFT(buffer,sig);
-			powers = FFTSubbandPower.kr(chain,cutfreqs,1,scalemode);
+			powers = FFTSubbandPower.kr(chain,args[\cutfreqs],1,args[\scalemode]);
 			Out.kr(bus, powers*mult);
 		}).load(Server.default);
 	}
 
 	makeSpecificGui {
-		
-		this.showMultiSlider();
+		this.addNormalizeButton();
 		this.addSlider(\mult,[0.01,100,\exp,0.01].asSpec);
-		controls.put(\showsum,EZNumber(win,125@18,"Sum:"));
-
-		win.setInnerExtent(win.bounds.width,win.bounds.height+(24*3));
+		if(doPlot){this.addPlotter(xaxis:args[\spec]);controls[\plot].plotMode_(\steps);};
+		if(doStats){this.addStats()};
+		win.setInnerExtent(win.bounds.width,win.bounds.height+hextend);
 	}
-	
-	detect {|net|
+
+	detect {|nets|
+
 		bus.getn(nBus,{|val|
-			val=val.max(0).min(1); //limit range
-			if(verbose){format("% :  % ",name,val).postln};
+			if(doNormalize) {val=val.normalize};
 			{
-				controls[\show].value_(val);
-				controls[\showsum].value_(val.sum);
-				}.defer;
-			net.sendMsg(oscstr,tag,nBus,val.asFloat.round(0.01));
-			});
-		}	
+			if(doStats){this.updateStats(val)};
+			if(verbose){format("% :  % ",name,val).postln};
+			if(doPlot){
+				controls[\plot].setValue(val,findSpecs: false);
+				controls[\plot].calcSpecs;
+			};
+			}.defer;
+			//send messages
+			nets.do({|net| net.sendMsg(oscstr,tag,nBus,val) });
+		});
+	}	
 	
 }

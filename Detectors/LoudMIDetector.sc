@@ -5,6 +5,7 @@ LoudMIDetector : MIDetector{
 	}	
 	
 	init {
+		if(args.isNil,{args=()},{var tmp=();tmp.putPairs(args);args=tmp;});
 		this.initValues();
 		super.init();
 		this.loadSynthDef();
@@ -36,18 +37,18 @@ LoudMIDetector : MIDetector{
 	makeSpecificGui {
 		this.addBasicSlider(\mult,[0.01,100,\exp,0.01].asSpec);
 		controls.put(\show,NumberBox(win,45@18));
-		win.setInnerExtent(win.bounds.width,win.bounds.height+24);
+		win.setInnerExtent(win.bounds.width,win.bounds.height+hextend);
 	}
 	
-	detect {|net|
+	detect {|nets|
 		bus.get({|val|
-			val=(val-0.19); //silence
+			{
+			controls[\show].value_(val.round(0.01));
 			if(verbose){format("% :  % ",name,val).postln};
-			{controls[\show].value_(val.round(0.01))}.defer;
-			net.sendMsg(oscstr,tag,val);
-		}
-		);	
-		
+			}.defer;
+			//send messages
+			nets.do({|net| net.sendMsg(oscstr,tag,val) });
+		});	
 	}
 	
 	

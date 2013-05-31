@@ -5,6 +5,7 @@ FTCrestMIDetector : MIDetector{
 	}	
 	
 	init {
+		if(args.isNil,{args=()},{var tmp=();tmp.putPairs(args);args=tmp;});
 		this.initValues();
 		super.init();
 		this.loadSynthDef();
@@ -17,35 +18,34 @@ FTCrestMIDetector : MIDetector{
 		if(args.isNil,{args=[]});
 		name="FTCrest";
 		nBus=1;
-		bus=Bus.control(Server.default,nBus);	
-		value=0;
+		bus=Bus.control(Server.default,nBus);
+		this.setSynthArg();
 	}
 
 	loadSynthDef {
-		synthname=name++"MIDetect";
 		SynthDef(synthname,{|in=0,gate=1,bus|
-		var sig,crest,chain;
-		sig=InFeedback.ar(in);
-		chain = FFT(LocalBuf(2048,1), sig);
-		crest = FFTCrest.kr(chain);
-		Out.kr(bus,crest.log)
+			var sig,crest,chain;
+			sig=InFeedback.ar(in);
+			chain = FFT(LocalBuf(2048), sig);
+			crest = FFTCrest.kr(chain);
+			Out.kr(bus,crest.log)
 		}).load(Server.default);
 	}
 
 	makeSpecificGui{
 		controls.put(\show,NumberBox(win,60@18));
-		win.setInnerExtent(win.bounds.width,win.bounds.height+24);
+		win.setInnerExtent(win.bounds.width,win.bounds.height+hextend);
 	}
 	
-	detect {|net|
+	detect {|nets|
 		bus.get({|val|
-			if(verbose){format("% : %  ",name,val).postln};
 			{
-				controls[\show].value_(val.round(0.01));
+			controls[\show].value_(val.round(0.01));
+			if(verbose){format("% :  % ",name,val).postln};
 			}.defer;
-			net.sendMsg(oscstr,tag,val)
-			}
-		);	
+			//send messages
+			nets.do({|net| net.sendMsg(oscstr,tag,val) });
+		});	
 		
 	}
 	

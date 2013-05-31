@@ -15,106 +15,127 @@ Thomas Sanchez Lengeling
 EXAMPLES::
 
 CODE::
-s.boot;
 
+//Pitch related detectors
 (
-//use default parameters for the detectors
 a=MIDetectorManager.new(net:NetAddr("127.0.0.1",32000));
-//Use default parameter for pitch
 a.addDetector("Pitch");
-//Change initial tolerance of onset to 0.3
-a.addDetector("Onset",[\tol,0.3]);
-a.addDetector("Amp");
-//Choose Number of bands to detect between the default frecuency values
-a.addDetector("Power",[\nbands,64]);
+a.addDetector("Tartini");
+a.addDetector("FTPeak");
 )
 
-//Try it out with this sound
-x={Decay2.ar(Impulse.ar(2),0.01,0.2)*SinOsc.ar(LFNoise0.kr(2).range(20,10000).poll)}.play
-//Or your mouse
-x={Decay2.ar(Impulse.ar(2),0.01,0.2)*SinOsc.ar(MouseX.kr(20,10000,1).poll)}.play
-//White noise
-x={WhiteNoise.ar}.play
-//Kill it!
+// VS a simple SineWave
+x={
+  var freq=MouseX.kr(20,10000).poll(label:"Real freq");
+  SinOsc.ar(freq )*0.2
+}.play
+x.free
+
+// VS a Blip Wave o Buzz with 4 Harmonics
+x={
+  var freq=MouseX.kr(20,10000).poll(label:"Real freq");
+  SinOsc.ar(freq ,4)*0.2
+}.play
+
+x.free
+// VS a Blip Wave o Buzz with 200 Harmonics
+x={
+  var freq=MouseX.kr(20,10000).poll(label:"Real freq");
+  Blip.ar(freq ,200)*0.2
+}.play
+
+x.free
+
+// vs a Bank of frequency resonators
+x={ DynKlank.ar(`[[200, 671, 1153, 1723], nil, [1, 1, 1, 1]], PinkNoise.ar([0.007,0.007])) }.play;
+x.free
+
+// vs a White Noise
+x={ WhiteNoise.ar(0.2) }.play;
+x.free
+
+//Volume related detectors
+(
+a=MIDetectorManager.new(net:NetAddr("127.0.0.1",32000));
+a.addDetector("Amp");
+a.addDetector("WAmp",[\winSize,0.2]);
+a.addDetector("Loud");
+a.addDetector("FTPower");
+)
+
+//vs a Saw modulated sound
+x={
+  var amp=LFSaw.ar(0.5, 1).abs.poll(label:"Mod Amp");
+  SinOsc.ar(440 )*amp
+}.play
+
+x.free
+// Vs a slooow chirp
+Synth(\kick_chirp,[\fade,10]);
+// Vs a fast chirp
+Synth(\kick_chirp,[\fade,2]);
+
+//vs Some Impulses
+x={Impulse.ar(4)}.play
+x.free
+//vs Many Impulses
+x={Impulse.ar(24)}.play
+x.free
+
+//vs random Volume grains
+x={Decay2.ar(Dust.ar(4),0.01,0.2,LFNoise2.kr(24).range(0,5))*SinOsc.ar(LFNoise2.kr(2).range(200,8800))*0.2}.play
+x.free
+
+//Onset related detectors
+(
+a=MIDetectorManager.new(net:NetAddr("127.0.0.1",32000));
+a.addDetector("Onset");
+a.addDetector("Coyote");
+a.addDetector("OnsetBand");
+a.addDetector("BeatTrack");
+)
+
+//Try with different onsets
+
+(
+a=MIDetectorManager.new(net:NetAddr("127.0.0.1",32000),in:0,tag:0);
+a.addDetector("OnsetBand");
+a.addDetector("CoyoteBand");
+)
+
+x={  Mix.ar(Decay2.ar(Impulse.ar([1,0.5],[0,0.25]),0.01,[0.25,1])* [Pulse.ar(440),Saw.ar(1300)])}.play;
+
+
+//Spectral related detectors
+(
+a=MIDetectorManager.new(net:NetAddr("127.0.0.1",32000));
+a.addDetector("FTCrest");
+a.addDetector("SpecFlat");
+a.addDetector("PowerBands");
+//a.addDetector("FlatBands");
+)
+//Also FTPower, FTPeak
+
+// SpecFlat,FTCrest vs WHiteNoise and SinOsc
+x={
+  Mix.ar(XFade2.ar(WhiteNoise.ar, SinOsc.ar, MouseX.kr(-1,1)))
+}.play;
+x.free
+
+x={Nes2.ar(Impulse.kr(3), a0:2r00010111, a2:2r10000000, smask:2r00000001)}.play
+x.free
+
+//More complicated info + Plots
+( 
+a=MIDetectorManager.new(net:NetAddr("127.0.0.1",32000),in:0,tag:0);
+a.addDetector("Signal");
+a.addDetector("FTMags");
+a.addDetector("FTBins"); //send fftbins
+)
+
+x={Mix.ar(SinOsc.ar(LFNoise2.kr([2,1,3,5],1,0).range(20,20000)))*0.01}.play;
 x.free
 ::
 
 EXAMPLES::
-Processing code to recieve and parse messages.
-
-CODE::
-import java.nio.*;
-
-OscP5 oscP5;
-NetAddress myRemoteLocation;
-
-
-import oscP5.*;
-import netP5.*;
-
-boolean printOSCMessage = true;
-
-
-void setup()
-{
-  size(100,100);
-  oscSetup();
-  background(0);
-}
-
-void draw() {
-
-}
-
-void oscSetup(){
-  oscP5 = new OscP5(this, 32000);
-  oscP5.plug(this, "ampResponse", "/amp");
-  oscP5.plug(this, "onsetResponse", "/onset");
-  oscP5.plug(this, "pitchResponse", "/pitch");
-  oscP5.plug(this, "powerResponse", "/power");
-}
-
-
-/* Osc events reciever for not plugged messages */
-void oscEvent(OscMessage theOscMessage) {
-    /* print the address pattern and the typetag of the received OscMessage */
-    if (printOSCMessage && theOscMessage.isPlugged() == false) {
-        print("### received an osc message.");
-        print(" addrpattern: " + theOscMessage.addrPattern());
-        println(" typetag: " + theOscMessage.typetag());
-        theOscMessage.printData();
-    }
-  
-}
-/* Pluggable functions */
-public void ampResponse(int id, float amp) {
-    if (printOSCMessage)println("Amp:" + id + " " + amp);
-}
-
-public void onsetResponse(int id) {
-
-    if (printOSCMessage)println("Onset:" + id);
-}
-
-public void pitchResponse(int id, float pitch) {
-
-    if (printOSCMessage)println("Pitch:" + id + " " + pitch);
-}
-
-public void powerResponse(int id, int nbands,byte[] data){
-    if (printOSCMessage)println("Power:" + id + " " + nbands);
-
-    //Parse bytes to floats
-    int offset=data.length-nbands*4;    
-    ByteBuffer buffer = ByteBuffer.allocate(nbands*4);
-    buffer.put(data,0,4);
-    buffer.put(data,4+offset,4*(nbands-1)); //skip padding
-    
-    println("[");
-    for(int i=0; i < nbands; i++){
-      print(buffer.getFloat(i*4)+",");
-    }  
-   println("]");
-   
-}
-::
+Check the Processing Examples folder inside of the quarks to check out code to recieve and parse messages, also some visual examples.

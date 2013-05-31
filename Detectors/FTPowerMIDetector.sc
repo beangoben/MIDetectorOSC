@@ -5,6 +5,7 @@ FTPowerMIDetector : MIDetector{
 	}	
 	
 	init {
+		if(args.isNil,{args=()},{var tmp=();tmp.putPairs(args);args=tmp;});
 		this.initValues();
 		super.init();
 		this.loadSynthDef();
@@ -14,12 +15,13 @@ FTPowerMIDetector : MIDetector{
 
 	initValues {
 		//create default values if not present
-		if(args.isNil,{args=[]});
 		this.checkArg(\mult,1.0);
 		name="FTPower";
 		nBus=1;
 		bus=Bus.control(Server.default,nBus);	
 		value=0;
+		this.setSynthArg([\mult]);
+
 	}
 
 	loadSynthDef {
@@ -36,19 +38,18 @@ FTPowerMIDetector : MIDetector{
 	makeSpecificGui{
 		this.addSlider(\mult,[0.01,100,\exp,0.01].asSpec);
 		controls.put(\show,NumberBox(win,60@18));
-		win.setInnerExtent(win.bounds.width,win.bounds.height+24);
+		win.setInnerExtent(win.bounds.width,win.bounds.height+hextend);
 	}
 	
-	detect {|net|
+	detect {|nets|
 		bus.get({|val|
-			if(verbose){format("% : %  ",name,val).postln};
 			{
-			controls[\show].value_(val.round(0.01));
+			controls[\show].value_(val.round(1));
+			if(verbose){format("% :  % ",name,val).postln};
 			}.defer;
-			net.sendMsg(oscstr,tag,val)
-			}
-		);	
-		
+			//send messages
+			nets.do({|net| net.sendMsg(oscstr,tag,val) });
+		});	
 	}
 	
 	

@@ -5,6 +5,7 @@ OnsetMIDetector : MIDetector{
 	}	
 	
 	init {
+		if(args.isNil,{args=()},{var tmp=();tmp.putPairs(args);args=tmp;});
 		this.initValues();
 		super.init();
 		this.loadSynthDef();
@@ -14,22 +15,20 @@ OnsetMIDetector : MIDetector{
 
 	initValues {
 		//create default values if not present
-		if(args.isNil,{args=[]});
 		this.checkArg(\tol,0.15);
+		this.checkArg(\odftype,\rcomplex);
 		name="Onset";
 		nBus=1;
 		bus=Bus.control(Server.default,nBus);	
-		value=0;
+		this.setSynthArg([\tol]);
 	}
 
 	loadSynthDef {
-		synthname=name++"MIDetect";
 		SynthDef(synthname,{|in=0,gate=1,tol=0.15,amp=0,bus|
-			var sig,buffer,chain,onsets,pips,counter;
-			buffer=LocalBuf(1024);
+			var sig,chain,onsets,pips;
 			sig=InFeedback.ar(in);
-			chain = FFT(buffer, sig);
-			onsets= Onsets.kr(chain, tol, \rcomplex);
+			chain = FFT(LocalBuf(1024), sig);
+			onsets= Onsets.kr(chain, tol, args[\odftype]);
 			pips = WhiteNoise.ar(EnvGen.kr(Env.perc(0.001, 0.1, 0.2), onsets));
 			Out.ar(in,pips*amp);
 			Out.kr(bus,In.kr(bus)+onsets);
@@ -39,17 +38,18 @@ OnsetMIDetector : MIDetector{
 	makeSpecificGui {
 		this.addSoundButton();
 		this.addBasicSlider(\tol,[0,1,\lin].asSpec);
-		win.setInnerExtent(win.bounds.width,win.bounds.height+24);
+		win.setInnerExtent(win.bounds.width,win.bounds.height+hextend);
 	}
 	
-	detect {|net|
+	detect {|nets|
 		bus.get({|val|
 			if(val > 0){
-				if(verbose){format("%!",name).postln};
-				net.sendMsg(oscstr,tag);
-				bus.set(0)};
+			if(verbose){format("% :  % ",name,val).postln};
+			//send messages
+			nets.do({|net| net.sendMsg(oscstr,tag,val) });
+			bus.set(0);
+			}
 		});	
-		
 	}
 	
 }

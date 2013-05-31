@@ -5,6 +5,7 @@ TartiniMIDetector : MIDetector{
 	}	
 	
 	init {
+	    if(args.isNil,{args=()},{var tmp=();tmp.putPairs(args);args=tmp;});
 		this.initValues();
 		super.init();
 		this.loadSynthDef();
@@ -19,15 +20,15 @@ TartiniMIDetector : MIDetector{
 		nBus=1;
 		bus=Bus.control(Server.default,nBus);	
 		value=0;
+		this.setSynthArg();
 	}
 
 	loadSynthDef {
-		synthname=name++"MIDetect";
 		SynthDef(synthname,{|in=0,gate=1,bus|
-		var sig,freq,hasFreq;
-		sig=InFeedback.ar(in);
-		# freq, hasFreq = Tartini.kr(sig);
-		Out.kr(bus,hasFreq*freq)
+			var sig,freq,hasFreq;
+			sig=InFeedback.ar(in);
+			# freq, hasFreq = Tartini.kr(sig);
+			Out.kr(bus,hasFreq*freq)
 		}).load(Server.default);
 	}
 
@@ -36,15 +37,15 @@ TartiniMIDetector : MIDetector{
 		win.setInnerExtent(win.bounds.width,win.bounds.height+24);
 	}
 	
-	detect {|net|
+	detect {|nets|
 		bus.get({|val|
-			if(verbose){format("% :  % ",name,val).postln};
 			{
-				controls[\show].value_(val.round(1))}.defer;
-				if(val > 0 ){net.sendMsg(oscstr,tag,val)}
-			}
-		);	
-		
+			controls[\show].value_(val.round(1));
+			if(verbose){format("% :  % ",name,val).postln};
+			}.defer;
+			//send messages
+			if(val > 0 ){nets.do({|net| net.sendMsg(oscstr,tag,val) })};
+		});	
 	}
 	
 	

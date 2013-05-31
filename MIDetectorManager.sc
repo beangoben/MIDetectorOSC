@@ -11,7 +11,8 @@ MIDetectorManager {
 		on=false;
 		detectors=List.new();
 		controls=();
-		if(net.isNil,{net=NetAddr("127.0.0.1",12000)});
+		if(net.isNil,{net=[NetAddr("127.0.0.1",12000)]});
+		if((net.isArray).not,{net=[net]} );
 		if((in.isArray).not,{in=[in]} );
 		if((tag.isArray).not,{tag=[tag]});
 		//create a TempoClock for our Osc-sending loop
@@ -30,43 +31,31 @@ MIDetectorManager {
 				})
 			}
 		);
-		
 		this.run;
-		
 	}
 	
 	makeWindow {
-		win = Window.new("MIDetectorManager",Rect(128, 90, 500, 64)).front;
+		win = Window.new("MIDetectorManager",Rect(128, 90, 550, 64)).front;
 		win.view.decorator = FlowLayout( win.view.bounds,10@10, 4@4);
 		win.onClose_({ this.kill });
 	}
 
 	makeNetGui {
-
 		controls.put(\netbox,
 			StaticText(win,240@20)
-			.string_(format("IP:  %   Port:  %  ",net.ip,net.port))
+			.string_(format("IP:  %   Port:  %  ",net[0].ip,net[0].port))
 		);
-		/*
-		controls.put(\tagbox,
-			StaticText(win,100@20)
-			.string_(format(" Tags: %",tag))
-		);
-		*/
 		win.view.decorator.nextLine;
 	}
 	//update NetAddr
 	setNetAddr {|net|
-		this.net=net;
-		controls[\netbox].string=format("IP:  %   Port:  %  ",net.ip,net.port);
+		this.net=[net];
+		controls[\netbox].string=format("IP:  %   Port:  %  ",net[0].ip,net[0].port);
 	}
 
 	addDetector{|type,args|
-
 		var classTmp;
 		classTmp=(type++"MIDetector").asSymbol.asClass;
-
-
 		if( (classTmp.notNil) && (classTmp.superclass == MIDetector) ,
 			{
 			in.do({
@@ -76,8 +65,7 @@ MIDetectorManager {
 			});
 			},
 			{format("MIDetector: Could not find detector % !",type).error; }
-			);
-		
+		);	
 	}
 
 	makeMainGui {
@@ -101,23 +89,17 @@ MIDetectorManager {
 	run {	
 		tempo.schedAbs(tempo.beats.ceil,{ arg beat, sec;
 			if(on){	
-				detectors.do({|item|
-					if(item.on ){		
-						item.detect(net);
-					};
-					
-				});
+				detectors.do({|item| if(item.on ){item.detect(net)};});
 			};
-			1});	
-		
+		1});	
 	}	
-	
+
 	kill {
 		detectors.do({|item|
 			item.kill();	
 		});
 		tempo.clear;
-		tempo.stop;	
+		tempo.stop;		
 		controls[\onOff].valueAction_(0);
 
 	}
