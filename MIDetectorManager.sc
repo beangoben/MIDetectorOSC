@@ -1,87 +1,103 @@
 MIDetectorManager {
-	var win,<>net,in,tag;
+	var win,sendrate,<>nets,ins,tags,defaultargs;
 	var tempo,detectors,controls,on;
+	var fftrate,krrate,fftsize,datakr,datafft;
 	
-	*new{|win=nil,types=nil,rate=60,net=nil,in=0,tag=0|
-		^super.newCopyArgs(win,net,in,tag).init(types,rate)
+	*new{|win=nil,sendrate=60,nets=nil,ins=0,tags=0,args|
+		^super.newCopyArgs(win,sendrate,nets,ins,tags,args).init()
 	}	
 	
-	init {|types,rate|
+	init {
 		// Initialize stuff
 		on=false;
-		detectors=List.new();
 		controls=();
-		if(net.isNil,{net=[NetAddr("127.0.0.1",12000)]});
-		if((net.isArray).not,{net=[net]} );
-		if((in.isArray).not,{in=[in]} );
-		if((tag.isArray).not,{tag=[tag]});
+		detectors=List.new();
+		defaultargs=defaultargs? ();
+		if(defaultargs.isArray){ defaultargs=().putPairs(defaultargs)};
+		nets=nets?[NetAddr("127.0.0.1",32000)];
+		nets=nets.asArray;
+		ins=ins.asArray;
+		tags=tags.asArray;
+		// calculate rates
+		fftsize=2048;
+		fftrate=Server.default.sampleRate/(fftsize*0.5);  
+		krrate=Server.default.sampleRate/Server.default.options.blockSize;
+		// calculate how many values we will have each send cycle
+		datakr=(krrate/sendrate).ceil;
+		datafft=(fftrate/sendrate).ceil;
+		//add some useful values
+		defaultargs[\sendrate]=sendrate;
+		defaultargs[\datakr]=datakr;
+		defaultargs[\datafft]=datafft;
+		defaultargs[\fftsize]=fftsize;
+		defaultargs[\fftwintype]=1;
 		//create a TempoClock for our Osc-sending loop
-		tempo=TempoClock.new(rate);	
+		tempo=TempoClock.new(sendrate);	
 		// Create window if not given
 		if(win.isNil,{this.makeWindow()});
         // GUI
         this.makeMainGui();
         this.makeNetGui();
-		// Create Detectors if an array with types is given
-		if(types.isNil,
-			nil,
-			{
-				types.do({|item|
-					this.addDetector(item,nil)
-				})
-			}
-		);
+        win.view.decorator.nextLine;
+        //start loop
 		this.run;
 	}
 	
 	makeWindow {
-		win = Window.new("MIDetectorManager",Rect(128, 90, 550, 64)).front;
-		win.view.decorator = FlowLayout( win.view.bounds,10@10, 4@4);
+		win = Window.new("MIDetectorManager",Rect(128, 90, 560, 40)).front;
+		win.view.decorator = FlowLayout( win.view.bounds,5@5, 4@4);
 		win.onClose_({ this.kill });
 	}
 
 	makeNetGui {
-		controls.put(\netbox,
+		nets.do({|item,i|
+		controls.put("net"++i,
 			StaticText(win,240@20)
-			.string_(format("IP:  %   Port:  %  ",net[0].ip,net[0].port))
+			.string_(format("Net% ip:  %, port:  %  ",i,item.ip,item.port))
 		);
-		win.view.decorator.nextLine;
+		if(i%2==1){  win.setInnerExtent(win.bounds.width,win.bounds.height+20)}; //skip line every off net adress
+		});
 	}
+	
 	//update NetAddr
 	setNetAddr {|net|
-		this.net=[net];
-		controls[\netbox].string=format("IP:  %   Port:  %  ",net[0].ip,net[0].port);
+		nets=net.asArray;
+		this.makeNetGui();
 	}
-
-	addDetector{|type,args|
+	//Add a detector 
+	addDetector{|type,in=0,tag=0,args|
 		var classTmp;
 		classTmp=(type++"MIDetector").asSymbol.asClass;
-		if( (classTmp.notNil) && (classTmp.superclass == MIDetector) ,
-			{
-			in.do({
-				arg item,i;
-				detectors.add(classTmp.new(win,item,tag[i],args));
-				win.view.decorator.nextLine;
-			});
-			},
-			{format("MIDetector: Could not find detector % !",type).error; }
-		);	
+		//convert from array of pairs to dictionary
+		args=args?();
+		if(args.isArray){args=().putPairs(args)};
+		//add default args
+		args.putPairs( defaultargs.getPairs  );
+		if( classTmp.notNil){
+		if(classTmp.superclass == MIDetector)
+			{ detectors.add(classTmp.new(win,in,tag,args)); win.view.decorator.nextLine; }
+			{format("MIDetector: Could not find detector of type % !",type).error }
+		}
+		{ format("MIDetector: Could not find detector of type % !",type).error };
+		
+	}
+	//Add a detector for each channel
+	addDetectors{|type,args|
+		ins.do({|item,i| this.addDetector(type,item,tags[i],args) });
 	}
 
 	makeMainGui {
 		controls.put(\onOff,
 			Button(win, 100@20)
 			.states_([
-				["ON", Color.black, Color.red],
-				["OFF", Color.white, Color.black],
+				["ON", Color.white, Color.green],
+				["OFF", Color.black, Color.red]
 			])
-			.action_({ arg butt;
-				on=(butt.value==1);
-				detectors.do({|item|
-					item.onOff(butt.value);	
-				});	
+			.action_({|butt|
+				on=butt.value.asBoolean;
+				detectors.do({|item| item.onOff(butt.value)	});	
 			})
-			.valueAction_(on.binaryValue)
+			.valueAction_(on)
 		);
 
 	}
@@ -89,19 +105,15 @@ MIDetectorManager {
 	run {	
 		tempo.schedAbs(tempo.beats.ceil,{ arg beat, sec;
 			if(on){	
-				detectors.do({|item| if(item.on ){item.detect(net)};});
+				detectors.do({|item| if(item.on ){item.detect(nets)};});
 			};
 		1});	
 	}	
 
 	kill {
-		detectors.do({|item|
-			item.kill();	
-		});
+		controls[\onOff].valueAction_(0);
 		tempo.clear;
 		tempo.stop;		
-		controls[\onOff].valueAction_(0);
-
 	}
 	
 	

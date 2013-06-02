@@ -18,7 +18,7 @@ How to install as a Quark
 
   So this would be...
 
-    <pre><code>cd folder
+    <pre><code>cd folder  
     git clone https://github.com/beangoben/MIDetectorOSC.git
     </code></pre>
     
@@ -35,9 +35,8 @@ Just copy to your Supercollider/Extensions folder.
 
 Wish/Todo-list:
 -------------------------
-* Onset detection + BandPass filtering needs some work.
-* Fix multiple onset detectors bug (might be LocalBuf?).
-* More detectors: FFT Centroids, Chromagrams, Mel coefficients.
+
+* More detectors: FFTbins, FFT Centroids, Chromagrams, Mel coefficients.
 * Make awesome documentation and examples with processing.
 * Calculate statistical info like medians, max,min, averages and variance.
 

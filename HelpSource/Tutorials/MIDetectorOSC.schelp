@@ -1,24 +1,102 @@
 TITLE:: MIDetectorOSC guide/overview
 summary:: Easy to use classes for sending musical information to other applications via OSC messages.
 categories:: Convenience, Musical Information, OSC
-related:: Classes/Amplitude, Classes/Pitch, Classes/Tarini, Classes/Onsets, Classes/FFTSubbandPower
-
-DESCRIPTION:: Easy to use classes for sending musical information to other applications via OSC messages. Fill me more
 
 
+DESCRIPTION:: Easy to use classes for sending musical information to other applications via OSC messages. 
 
-2013 -- Benjamin Sanchez Lengeling
+Current detectors are implemented based on existing UGENS.
 
-Thanks also to:
-Thomas Sanchez Lengeling
+SUBSECTION:: Pitch related detectors
+definitionlist::
+ 	## link::#PitchMIDetector:: using link::#Pitch::
+ 	|| .
+ 	## link::#TartiniMIDetector:: using  link::#Tartini::
+ 	|| .
+ 	## link::#FTPeakMIDetector:: using  link::#FFTPeak::
+ 	|| .
+::
+SUBSECTION:: Amplitude-Volume related detectors
+definitionlist::
+ 	## link::#AmpMIDetector:: using link::#Amplitude::
+ 	|| .
+ 	## link::#WAmpMIDetector:: using  link::#WAmp::
+ 	|| .
+ 	## link::#LoudMIDetector:: using  link::#Loudness::
+ 	|| .
+ 	## link::#FTPowerMIDetector:: using  link::#FFTPower::
+ 	|| .
+::
+SUBSECTION::Onset related detectors
+definitionlist::
+ 	## link::#OnsetMIDetector:: using link::#Onsets::
+ 	|| .
+ 	## link::#OnsetBandMIDetector:: using  link::#Onsets::
+ 	|| .
+ 	## link::#CoyoteMIDetector:: using  link::#Coyote::
+ 	|| .
+ 	## link::#CoyoteBandMIDetector:: using  link::#Coyote::
+ 	|| .
+::
+SUBSECTION:: Peakiness, Noiseness, Flatness related detectors
+definitionlist::
+ 	## link::#FTCrestMIDetector:: using link::#FFTCrest::
+ 	|| .
+ 	## link::#FlatMIDetector:: using  link::#SpecFlat::
+ 	|| .
+::
+SUBSECTION:: Others
+definitionlist::
+ 	## link::#PowerBandsMIDetector:: using link::#FFTSubbandPower::
+ 	|| .
+ 	## link::#FFTBinMIDetector::
+ 	|| .
+ 	## link::#FFTMagsMIDetector:: using  link::#PV_Magbuffer::
+ 	|| .
+ 	## link::#RawSignal::
+ 	|| .
+::
 
-EXAMPLES::
-
+SECTION:: Getting Started
+Steps need to start detecting stuff:
+NUMBEREDLIST::
+## Setup a MIDetectorManager
+## Add MIDetectors to the manager
+::
+SUBSECTION:: Setup a MIDetectorManager
 CODE::
-
-//Pitch related detectors
+//Creating a MIDetectorManager
+//Default
 (
-a=MIDetectorManager.new(net:NetAddr("127.0.0.1",32000));
+a=MIDetectorManager.new();
+)
+//Or using all of it's arguments
+(
+w = Window.new("MIDetectorManager",Rect(0,0, 800, 100)).front;
+w.view.decorator = FlowLayout( w.view.bounds,10@10, 4@4);
+a=MIDetectorManager.new(win:w,sendrate:60,nets:NetAddr("127.0.0.1",32000),ins:0,tags:0);
+)
+//Sending to multiple net addresses
+(
+var net0,net1,net2,net3,net4;
+net0=NetAddr("127.0.0.1",32000);
+net1=NetAddr("127.0.0.1",32001);
+net2=NetAddr("127.0.0.1",32002);
+net3=NetAddr("127.0.0.1",32003);
+net4=NetAddr("127.0.0.1",32004);
+a=MIDetectorManager.new(nets:[net0,net1,net2,net3,net4]);
+)
+//Listening to multiple channels and sending multiples tags
+//One tag for each channel
+(
+a=MIDetectorManager.new(ins:[0,1],tags:[0,1]);
+)
+::
+
+SUBSECTION:: Pitch related detectors
+CODE::
+(
+a=MIDetectorManager.new(args:[\doPost,true,\stattime,4,\doStats,true]);
 a.addDetector("Pitch");
 a.addDetector("Tartini");
 a.addDetector("FTPeak");
@@ -53,10 +131,12 @@ x.free
 // vs a White Noise
 x={ WhiteNoise.ar(0.2) }.play;
 x.free
+::
 
-//Volume related detectors
+SUBSECTION:: Volume related detectors
+CODE::
 (
-a=MIDetectorManager.new(net:NetAddr("127.0.0.1",32000));
+a=MIDetectorManager.new(args:[\doPost,true,\stattime,4,\doStats,true]);
 a.addDetector("Amp");
 a.addDetector("WAmp",[\winSize,0.2]);
 a.addDetector("Loud");
@@ -71,10 +151,19 @@ x={
 
 x.free
 // Vs a slooow chirp
-Synth(\kick_chirp,[\fade,10]);
-// Vs a fast chirp
-Synth(\kick_chirp,[\fade,2]);
+x={
+  var amp=Line.kr(1,0,10);
+  SinOsc.ar(XLine.kr(8000,400,10))*amp
+}.play
 
+x.free
+// Vs a fast chirp
+x={
+  var amp=Line.kr(1,0,2);
+  SinOsc.ar(XLine.kr(8000,400,2))*amp
+}.play
+
+x.free
 //vs Some Impulses
 x={Impulse.ar(4)}.play
 x.free
@@ -85,57 +174,178 @@ x.free
 //vs random Volume grains
 x={Decay2.ar(Dust.ar(4),0.01,0.2,LFNoise2.kr(24).range(0,5))*SinOsc.ar(LFNoise2.kr(2).range(200,8800))*0.2}.play
 x.free
+::
 
-//Onset related detectors
+SUBSECTION::Onset related detectors
+CODE::
 (
-a=MIDetectorManager.new(net:NetAddr("127.0.0.1",32000));
+a=MIDetectorManager.new(args:[\doPost,true,\stattime,4,\doStats,true]);
 a.addDetector("Onset");
 a.addDetector("Coyote");
-a.addDetector("OnsetBand");
-a.addDetector("BeatTrack");
+)
+x={Impulse.ar(3)}.play
+x.free
+
+x={  Mix.ar(Decay2.ar(Impulse.ar([0.5,0.5],[0,0.5]),0.05,[0.25,0.5])* [Pulse.ar(220),Pulse.ar(2200)])}.play;
+
+x.free
+
+// Try with band specific-onsets
+(
+a=MIDetectorManager.new(args:\doPost,true,\stattime,4,\doStats,true,\doPlot,false]);
+a.addDetector("OnsetBand",args:[\freq,2200]);
+a.addDetector("CoyoteBand",args:[\freq,2200]);
+a.addDetector("OnsetBand",args:[\freq,220]);
+a.addDetector("CoyoteBand",args:[\freq,220]);
 )
 
-//Try with different onsets
+x={  Mix.ar(Decay2.ar(Impulse.ar([0.5,0.5],[0,0.5]),0.05,[0.25,0.5])* [Pulse.ar(220),Pulse.ar(2200)])}.play;
+
+x.free
+
+::
+
+SUBSECTION::Peakiness, Noiseness, Flatness related detectors
+
+CODE::
 
 (
-a=MIDetectorManager.new(net:NetAddr("127.0.0.1",32000),in:0,tag:0);
-a.addDetector("OnsetBand");
-a.addDetector("CoyoteBand");
-)
-
-x={  Mix.ar(Decay2.ar(Impulse.ar([1,0.5],[0,0.25]),0.01,[0.25,1])* [Pulse.ar(440),Saw.ar(1300)])}.play;
-
-
-//Spectral related detectors
-(
-a=MIDetectorManager.new(net:NetAddr("127.0.0.1",32000));
+a=MIDetectorManager.new(nets:NetAddr("127.0.0.1",32000),args:[\doPost,true,\stattime,4,\doStats,true,\doPlot,true]);
+//For FTCrest we have the log button that applies logarithm to the data, which might give a more useful range
 a.addDetector("FTCrest");
 a.addDetector("SpecFlat");
-a.addDetector("PowerBands");
-//a.addDetector("FlatBands");
 )
-//Also FTPower, FTPeak
-
-// SpecFlat,FTCrest vs WHiteNoise and SinOsc
-x={
-  Mix.ar(XFade2.ar(WhiteNoise.ar, SinOsc.ar, MouseX.kr(-1,1)))
-}.play;
+//Notes on FTCrest:
+//Without log: Silence = 1, WhiteNosysise ~7.4, Sine ~ 600-800 (depends on freq)
+//With log: Silence = 0, WhiteNoise ~2, Sine ~ 6.2-6.7
+//Notes on SpecFlat:
+//Without Silence ~ 0.81, WhiteNoise ~0.83, Sine ~ 0
+x={Mix.ar(XFade2.ar(WhiteNoise.ar, SinOsc.ar, MouseX.kr(-1,1)))}.play;
+//FTCrest varies a little with freq, but SpecFlat dosen't.
+x={SinOsc.ar(Lag.kr(MouseX.kr(20,19000,1)))}.play
 x.free
 
-x={Nes2.ar(Impulse.kr(3), a0:2r00010111, a2:2r10000000, smask:2r00000001)}.play
-x.free
+::
 
-//More complicated info + Plots
-( 
-a=MIDetectorManager.new(net:NetAddr("127.0.0.1",32000),in:0,tag:0);
-a.addDetector("Signal");
+SUBSECTION:: Others
+CODE::
+//Fourier Transforms Bins and Mags
+//Send the fft frame or the magnitudes
+//In most cases the magnitudes are more convienient, unless you want phase information
+//The maximum number of data to send is 1024
+//You can also normalize the FTMags, which will give you a distrubution of the frequency
+(
+a=MIDetectorManager.new(nets:NetAddr("127.0.0.1",32000),args:[\doPost,true,\doPlot,true,\doStats,true]);
+a.addDetector("FTBins"); //sends an array of complex numbers Real1,Imag1....RealN-1,ImagN-1
 a.addDetector("FTMags");
-a.addDetector("FTBins"); //send fftbins
+)
+
+x={Mix.ar(SinOsc.ar(LFNoise2.kr([2,1,3,5],1,0).range(20,20000)))*0.01}.play;
+x.free
+
+//Raw Signal
+//SHould not be used for reproducing audio, more suited to visualize the form of soundwaves
+(
+a=MIDetectorManager.new(nets:NetAddr("127.0.0.1",32000),args:[\doPost,true,\doPlot,true,\doStats,true]);
+a.addDetector("RawSignal");
 )
 
 x={Mix.ar(SinOsc.ar(LFNoise2.kr([2,1,3,5],1,0).range(20,20000)))*0.01}.play;
 x.free
 ::
 
-EXAMPLES::
+SECTION:: Processing
 Check the Processing Examples folder inside of the quarks to check out code to recieve and parse messages, also some visual examples.
+To parse the OSC messages use Andreas Schlegel 's excelllent oscP5 library.
+Here we can see the basics behind 
+CODE::
+
+import oscP5.*;
+import netP5.*;
+import java.nio.*;
+
+OscP5 oscP5;
+
+boolean printOSCMessage = true;
+
+void setup(){
+  size(100,100);
+  oscSetup();
+}
+void draw(){
+
+}
+
+void oscSetup() {
+  //oSC INICIALIZATION  
+  oscP5 = new OscP5(this, 32000);
+  
+  //CONECT THE MESSAGESS INCOMMING FORM SUPERCOLLIDER 
+  //TO A FUNTION IN PROCESSING
+  oscP5.plug(this, "ampResponse", "/amp");
+  oscP5.plug(this, "onsetResponse", "/onset");
+  oscP5.plug(this, "pitchResponse", "/pitch");
+   oscP5.plug(this, "powerResponse", "/powerbands");
+}
+
+/* Osc events reciever for not plugged messages */
+void oscEvent(OscMessage theOscMessage) {
+  /* print the address pattern and the typetag of the received OscMessage */
+  if (printOSCMessage && theOscMessage.isPlugged() == false) {
+    print("### received an osc message.");
+    print(" addrpattern: " + theOscMessage.addrPattern());
+    println(" typetag: " + theOscMessage.typetag());
+  }
+}
+
+/* Pluggable functions */
+public void ampResponse(int id, float amp) {
+  if (printOSCMessage)println("Amp:" + id + " " + amp);
+}
+
+public void onsetResponse(int id) {
+  if (printOSCMessage)println("Onset:" + id);
+}
+
+public void pitchResponse(int id, float pitch) {
+  if (printOSCMessage)println("Pitch:" + id + " " + pitch);
+}
+
+public void powerResponse(int id, int nbands, byte[] data) {
+  if (printOSCMessage)println("Power:" + id + " " + nbands);
+
+  //Parse bytes to floats
+  int offset=data.length-nbands*4;    
+  ByteBuffer buffer = ByteBuffer.allocate(nbands*4);
+  buffer.put(data, 0, 4);
+  buffer.put(data, 4+offset, 4*(nbands-1)); //skip padding
+
+  if(printOSCMessage){
+    print("[");
+    for (int i=0; i < nbands; i++) {
+      print(buffer.getFloat(i*4)+",");
+    }  
+    println("]");
+ }
+    
+}
+
+
+void keyPressed(){
+  if(key == 'a'){
+    printOSCMessage = !printOSCMessage;
+  }
+}
+
+::
+
+
+
+SECTION:: Ideas? Comments? Feature Request?
+
+Send an email to beangoben@gmail.com
+
+2013 -- Benjamin Sanchez Lengeling
+
+Thanks also to:
+Thomas Sanchez Lengeling

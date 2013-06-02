@@ -1,4 +1,4 @@
-FTMagsMIDetector : MIDetector{
+RawSignalMIDetector : MIDetector{
 	var doNormalize;
 	*new{|win,in=0,tag=0,args=nil|
 		^super.newCopyArgs(win,in,tag,args).init();	
@@ -13,27 +13,26 @@ FTMagsMIDetector : MIDetector{
 		this.makeSpecificGui();
 	}
 	initValues {
-		this.checkArg(\mult,1.0);
-		doNormalize=this.checkArg(\doNormalize,false);
-		this.setSynthArg([\mult]);
 		//create default values if not present
-		name="FTMags";
+		doNormalize=this.checkArg(\doNormalize,false);
+		this.checkArg(\mult,1.0);
+		this.setSynthArg([\mult]);
+		name="RawSignal";
 		nchan=1;
 		//maximum number of values from getn is 1633 so we limit
-		args[\fftsize]=if( args[\fftsize] > 2048){2048}{args[\fftsize]};
-		datasize=args[\fftsize]/2;
-		statsize=datasize;
+		datasize=if(args[\fftsize] > 1024){1024}{args[\fftsize]};
+		statsize=1;
+		statarr=[];
 		buf=Buffer.alloc(Server.default,datasize,nchan);
-		args[\xaxis]=ControlSpec(1, datasize,\lin).asSpec;
-		args[\yaxis]=[0,1,\lin].asSpec;
+		args[\xaxis]=ControlSpec(0,datasize);
+		args[\yaxis]=[-1,1,\lin].asSpec;
 	}
 
 	loadSynthDef {
-		SynthDef(synthname,{|in=0,gate=1,buf,mult=1|
-			var sig,chain;
+		SynthDef(synthname,{|in=0,buf,mult=1|
+			var sig;
 			sig=InFeedback.ar(in);
-			chain=FFT(LocalBuf(args[\fftsize]),sig,wintype:args[\fftwintype]);
-			chain = PV_MagBuffer(chain*mult, buf);
+			RecordBuf.ar(sig*mult,buf);
 		}).load(Server.default);
 	}
 
@@ -48,7 +47,7 @@ FTMagsMIDetector : MIDetector{
 	}
 	
 	calcData{
-		buf.getn(0,datasize,{|val| sendvalue=if(doNormalize){val.normalize}{val} });
+		buf.getn(0,datasize,{|val| sendvalue=if(doNormalize){val.normalize(-1,1)}{val} });
 	}
 
 	updateGui{

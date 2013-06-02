@@ -1,126 +1,145 @@
 MIDetector{
 	var win,<>in,tag,args;
-	var synth,synthargs,synthname,bus,nBus,stats;
-	var dataBuf,doNormalize,doStats,doPlot;
-	var controls,hextend,slidercount;
-	var oscstr,name,verbose,value,<on;
-	var detectFunc;
+	var synth,synthargs,synthname,buf,nchan,datasize;
+	var statarr,stats,statsize;
+	var doDynamic,doStats,doPlot,doPost;
+	var controls,hextend,slidercount,hrow,hrowgap;
+	var oscstr,name,sendvalue,<on;
 
 	*new{
 		^super.new;	
 	}
-	
-	init{
-		verbose=false;
+
+	//part1
+	init1{
+		doDynamic=false;
+		doStats=this.checkArg(\doStats,false);
+		doPlot=this.checkArg(\doPlot,true);
+		doPost=this.checkArg(\doPost,true);
 		on=false;
+		this.checkArg(\stattime,4);
 		controls=();
-		stats=();
+		hextend=0; //size to extend the window
+		hrow=18;//size of a row
+		hrowgap=hrow+(win.view.decorator.gap.y);//size of a row
+		slidercount=0; //count how many sliders to extend the window
+	}
+	//part2, values to initialize after specific values have been initialized
+	init2{
+		synthargs=synthargs?[];
 		oscstr="/"++name.toLower;
-		doNormalize=false;
-		doStats=false;
-		doPlot=true;
-		hextend=0;
-		slidercount=0;
 		synthname=format("%MIDetect_%",name,1000.rand); //put rand to avoid duplicate names
+		if(nchan == 1){sendvalue=0}{sendvalue=0.dup(nchan)};
+		if(statarr.isNil && (doPlot || doStats)){
+			if(nchan == 1){statarr=0.dup(statsize)}{statarr=0.dup(statsize) dup: nchan};
+		};
+		stats=stats ? () ;
 	}
 
 	makeGenericGui{
-		StaticText(win,140@20).string_(format("%: %->%",oscstr,in,tag));
+		StaticText(win,140@hrow).string_(format("%: %->%",oscstr,in,tag));
 		
 		controls.put(\onOff,
-			Button(win,40@20)
+			Button(win,40@hrow)
 			.states_([["->",Color.white,Color.green],["||",Color.black,Color.red]])
 			.value_(on)
 			.action_({|butt|
-				value=butt.value.booleanValue;
-				on=(butt.value==1);
-				if(value,
-					{synth=Synth(synthname,[\in,in,\bus,bus,addAction:\addToTail]++synthargs)},
-					{synth.free}
+				on=butt.value.booleanValue;
+				if(on,
+					{synth=Synth(synthname,[\in,in,\buf,buf,addAction:\addToTail]++synthargs)},
+					{synth?synth.free}
 				);
 			})
 			);	
-		
-		controls.put(\verbosity,
-			Button(win,40@20)
-			.states_([["Post",Color.black,Color.green],["Post",Color.black,Color.red]])
-			.value_(false)
-			.action_({|butt|
-			verbose=butt.value.booleanValue;
-		}));	
-		hextend=hextend+20;	
+		if(doPost){this.addPostButton};
+		if(doPlot){this.addDynamicButton()};
+
+		hextend=hextend+hrowgap;	
 	}
 
-	addStats { 
-		controls.put(\max,EZNumber(win,100@20,"max"));
-		controls.put(\min,EZNumber(win,100@20,"min"));
-		controls.put(\mean,EZNumber(win,100@20,"mean"));
-		controls.put(\var,EZNumber(win,100@20,"var"));
+	addPostButton{
+		controls.put(\doPost,
+		Button(win,20@hrow)
+			.states_([["P",Color.white,Color.green],["P",Color.black,Color.red]])
+			.action_({|butt| doPost=butt.value.booleanValue})
+			.valueAction_(false)
+		);	
+	}
 
-		hextend=hextend+20;
+	addStats {
+		stats.keysDo({|key| 
+			StaticText(win,60@hrow).string_(key).align_(\right);
+			controls.put(key,NumberBox(win,60@hrow))
+		 });
+		hextend=hextend+hrowgap*((stats.size/4).ceil);
 	}
 
 	addSlider { |name,spec|
 
-		EZSlider(win,250@18,name,spec,
+		EZSlider(win,240@18,name,spec,
 			{|ez|synth.set(name,ez.value) },
 			args[name],false,labelWidth:35,numberWidth:45);
 		slidercount=slidercount+1;
-		if(slidercount%2 == 0){hextend=hextend+20;}
+		if(slidercount%2 == 0){hextend=hextend+hrowgap;}
 	}
 
 	addSoundButton {
-		Button(win,20@20).states_([["S"],["x"]])
+		Button(win,20@hrow).states_([["S"],["x"]])
 			.value_(0)
 			.action_({|butt|
 				synth.set(\amp,butt.value)
 			});
 	}
 
-	addNormalizeButton {
-		Button(win,20@20)
-			.states_([["_",Color.white,Color.black],["N",Color.black,Color.white]])
-			.value_(0)
+	addDynamicButton {
+		if(doPlot){
+		Button(win,30@hrow)
+			.states_([["Dyn",Color.white,Color.green],["Dyn",Color.black,Color.red]])	
 			.action_({|butt|
-				doNormalize=(butt.value.booleanValue)
-			});
+				doDynamic=(butt.value.booleanValue)
+			})
+			.value_(doDynamic);
+		};
 	}
 
 
-	addPlotter{|xaxis,yaxis|
+	addPlotter{
 		controls.put(\plot,
-			Plotter(name++"plot", Rect(0, 0, 512,100),win)
+			Plotter(name++"plot", Rect(0, 0, 512,5*hrow),win)
 			.plotMode_(\linear)
-			.value_(0.dup(nBus))
 			.editMode_(false)
+			.value_(0.dup(statsize))
 			.setProperties(
-				\backgroundColor, Color.white
+				\backgroundColor, Color.white,
+				\gridLineSmoothing, true
 			)
 		);	
 
-		if(yaxis.notNil){controls[\plot].specs_(yaxis)};
-		if(xaxis.notNil){controls[\plot].domainSpecs_(xaxis)};
-		hextend=hextend+100;
+		if(args[\yaxis].notNil){controls[\plot].specs_(args[\yaxis])};
+		if(args[\xaxis].notNil){controls[\plot].domainSpecs_(args[\xaxis])};
+		hextend=hextend+(hrow*4)+hrowgap;
 	}
 
 	showMultiSlider{
 			controls.put(\show,
-			MultiSliderView(win, Rect(0, 0, 256,50))
-			.value_(0.dup(nBus))
-			.size_(nBus)
+			MultiSliderView(win, Rect(0, 0, 256,hrow*3))
+			.value_(0.dup(nchan))
+			.size_(nchan)
 			.drawLines_(true)
 			.drawRects_(false)
-			.indexThumbSize_(256/nBus)
+			.indexThumbSize_(256/nchan)
 		);	
+		hextend=hextend+(hrow*2)+hrowgap;
 	}
 
 	onOff {|val|
-		controls[\onOff].valueAction_(val);	
+		controls[\onOff].valueAction=val;	
 	}
 	
 	kill {	
-		controls[\onOff].valueAction_(0);	
-		bus.free;
+		controls[\onOff].valueAction=0;	
+		buf?buf.free;
+		statarr?statarr.free;
 	}
 
 	checkArg {|name,value|
@@ -129,7 +148,7 @@ MIDetector{
 	}
 
 	setSynthArg {|names|
-		if(synthargs.isNil,{synthargs=[]});
+		synthargs=synthargs?[];
 		if(names.notNil){
 			names.do({|item|
 				synthargs=synthargs++[item,args[item]]
@@ -137,11 +156,7 @@ MIDetector{
 		};
 	}
 
-
-	updateStats{|val|
-		controls[\max].value_(val.maxItem);
-		controls[\min].value_(val.minItem);
-		controls[\mean].value_(val.mean);
-		controls[\var].value_(val.variance);
+	updateStatsGui{
+		stats.keysValuesDo({|key,value| controls[key].value_(value)});
 	}
 } 
