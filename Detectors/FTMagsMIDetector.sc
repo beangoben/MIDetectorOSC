@@ -1,5 +1,5 @@
 FTMagsMIDetector : MIDetector{
-	var doNormalize;
+	var doNormalize,startInx,endInx;
 	*new{|win,in=0,tag=0,args=nil|
 		^super.newCopyArgs(win,in,tag,args).init();	
 	}	
@@ -16,13 +16,15 @@ FTMagsMIDetector : MIDetector{
 		this.checkArg(\mult,1.0);
 		doNormalize=this.checkArg(\doNormalize,false);
 		this.setSynthArg([\mult]);
+		startInx=this.checkArg(\startInx,0);
+		endInx=this.checkArg(\endInx,128);
 		//create default values if not present
 		name="FTMags";
 		nchan=1;
 		//maximum number of values from getn is 1633 so we limit
 		args[\fftsize]=if( args[\fftsize] > 2048){2048}{args[\fftsize]};
-		datasize=args[\fftsize]/2;
-		statsize=datasize;
+		datasize=(args[\fftsize]/2).asInteger;
+		statsize=(endInx-startInx);
 		buf=Buffer.alloc(Server.default,datasize,nchan);
 		args[\xaxis]=ControlSpec(1, datasize,\lin).asSpec;
 		args[\yaxis]=[0,1,\lin].asSpec;
@@ -48,7 +50,7 @@ FTMagsMIDetector : MIDetector{
 	}
 	
 	calcData{
-		buf.getn(0,datasize,{|val| sendvalue=if(doNormalize){val.normalize}{val} });
+		buf.getn(startInx,statsize,{|val| sendvalue=if(doNormalize){val.normalize}{val} });
 	}
 
 	updateGui{
@@ -62,7 +64,7 @@ FTMagsMIDetector : MIDetector{
 	detect {|nets|
 		this.calcData();
 		{this.updateGui()}.defer;
-		nets.do({|net| net.sendMsg(oscstr,tag,datasize,sendvalue) });
+		nets.do({|net| net.sendMsg(oscstr,tag,statsize,sendvalue) });
 	}
 	
 }

@@ -19,7 +19,7 @@ MIDetectorManager {
 		ins=ins.asArray;
 		tags=tags.asArray;
 		// calculate rates
-		fftsize=2048;
+		fftsize=defaultargs[\fftsize]?2048;
 		fftrate=Server.default.sampleRate/(fftsize*0.5);  
 		krrate=Server.default.sampleRate/Server.default.options.blockSize;
 		// calculate how many values we will have each send cycle
