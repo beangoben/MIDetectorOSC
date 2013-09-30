@@ -7,7 +7,7 @@ MIDetector{
 	var oscstr,name,sendvalue,<on;
 
 	*new{
-		^super.new;	
+		^super.new;
 	}
 
 	//part1
@@ -38,7 +38,7 @@ MIDetector{
 
 	makeGenericGui{
 		StaticText(win,140@hrow).string_(format("%: %->%",oscstr,in,tag));
-		
+
 		controls.put(\onOff,
 			Button(win,40@hrow)
 			.states_([["->",Color.white,Color.green],["||",Color.black,Color.red]])
@@ -46,15 +46,19 @@ MIDetector{
 			.action_({|butt|
 				on=butt.value.booleanValue;
 				if(on,
-					{synth=Synth(synthname,[\in,in,\buf,buf,addAction:\addToTail]++synthargs)},
+					{
+						[synthname,[\in,in,\buf,buf]++synthargs].postln;
+					synth=Synth(synthname,[\in,in,\buf,buf]++synthargs)
+					//synth=Synth(synthname)
+					},
 					{synth?synth.free}
 				);
 			})
-			);	
+			);
 		if(doPost){this.addPostButton};
 		if(doPlot){this.addDynamicButton()};
 
-		hextend=hextend+hrowgap;	
+		hextend=hextend+hrowgap;
 	}
 
 	addPostButton{
@@ -63,11 +67,11 @@ MIDetector{
 			.states_([["P",Color.white,Color.green],["P",Color.black,Color.red]])
 			.action_({|butt| doPost=butt.value.booleanValue})
 			.valueAction_(false)
-		);	
+		);
 	}
 
 	addStats {
-		stats.keysDo({|key| 
+		stats.keysDo({|key|
 			StaticText(win,60@hrow).string_(key).align_(\right);
 			controls.put(key,NumberBox(win,60@hrow))
 		 });
@@ -94,7 +98,7 @@ MIDetector{
 	addDynamicButton {
 		if(doPlot){
 		Button(win,30@hrow)
-			.states_([["Dyn",Color.white,Color.green],["Dyn",Color.black,Color.red]])	
+			.states_([["Dyn",Color.white,Color.green],["Dyn",Color.black,Color.red]])
 			.action_({|butt|
 				doDynamic=(butt.value.booleanValue)
 			})
@@ -113,7 +117,7 @@ MIDetector{
 				\backgroundColor, Color.white,
 				\gridLineSmoothing, true
 			)
-		);	
+		);
 
 		if(args[\yaxis].notNil){controls[\plot].specs_(args[\yaxis])};
 		if(args[\xaxis].notNil){controls[\plot].domainSpecs_(args[\xaxis])};
@@ -128,16 +132,16 @@ MIDetector{
 			.drawLines_(true)
 			.drawRects_(false)
 			.indexThumbSize_(256/nchan)
-		);	
+		);
 		hextend=hextend+(hrow*2)+hrowgap;
 	}
 
 	onOff {|val|
-		controls[\onOff].valueAction=val;	
+		controls[\onOff].valueAction=val;
 	}
-	
-	kill {	
-		controls[\onOff].valueAction=0;	
+
+	kill {
+		controls[\onOff].valueAction=0;
 		buf?buf.free;
 		statarr?statarr.free;
 	}

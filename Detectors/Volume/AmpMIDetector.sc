@@ -1,9 +1,9 @@
 AmpMIDetector : MIDetector{
-	
+
 	*new{|win,in=0,tag=0,args=nil|
-		^super.newCopyArgs(win,in,tag,args).init();	
-	}	
-	
+		^super.newCopyArgs(win,in,tag,args).init();
+	}
+
 	init {
 		super.init1();
 		this.initValues();
@@ -36,6 +36,7 @@ AmpMIDetector : MIDetector{
 			sig=InFeedback.ar(in);
 			ampli=Amplitude.kr(sig,args[\attackTime],args[\releaseTime]);
 			RecordBuf.kr(ampli*mult,buf);
+			//Out.ar(1,WhiteNoise.ar()*ampli)
 		}).load(Server.default);
 	}
 
@@ -46,7 +47,7 @@ AmpMIDetector : MIDetector{
 		if(doStats){this.addStats()};
 		win.setInnerExtent(win.bounds.width,win.bounds.height+hextend);
 	}
-	
+
 	calcData{
 		buf.getn(0,datasize,{|val| sendvalue=val.mean });
 		if(doPlot || doStats){statarr=statarr.shift(-1).wrapPut(-1,sendvalue)};
@@ -54,9 +55,9 @@ AmpMIDetector : MIDetector{
 			stats[\max]=statarr.maxItem;
 			stats[\min]=statarr.minItem;
 			stats[\mean]=statarr.mean;
-			stats[\stdev]=statarr.stdDev(stats[\mean]); 
+			stats[\stdev]=statarr.stdDev(stats[\mean]);
 		};
-	
+
 	}
 
 	updateGui{
@@ -75,5 +76,5 @@ AmpMIDetector : MIDetector{
 		{this.updateGui()}.defer;
 		nets.do({|net| net.sendMsg(oscstr,tag,sendvalue) });
 	}
-	
+
 }
