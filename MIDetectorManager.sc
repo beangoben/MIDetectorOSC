@@ -17,6 +17,7 @@ MIDetectorManager {
 		nets=nets?[NetAddr("127.0.0.1",32000)];
 		nets=nets.asArray;
 		ins=ins.asArray;
+		tags.postln;
 		tags=tags.asArray;
 		// calculate rates
 		fftsize=defaultargs[\fftsize]?2048;
@@ -65,7 +66,7 @@ MIDetectorManager {
 		this.makeNetGui();
 	}
 	//Add a detector
-	addDetector{|type,in=0,tag=0,args|
+	addOneDetector{|type,in=0,tag=0,args|
 		var classTmp;
 		classTmp=(type++"MIDetector").asSymbol.asClass;
 		//convert from array of pairs to dictionary
@@ -82,8 +83,8 @@ MIDetectorManager {
 
 	}
 	//Add a detector for each channel
-	addDetectors{|type,args|
-		ins.do({|item,i| this.addDetector(type,item,tags[i],args) });
+	addDetector{|type,args|
+		ins.do({|item,i| this.addOneDetector(type,item,tags[i],args) });
 	}
 
 	makeMainGui {
