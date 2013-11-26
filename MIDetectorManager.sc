@@ -17,7 +17,6 @@ MIDetectorManager {
 		nets=nets?[NetAddr("127.0.0.1",32000)];
 		nets=nets.asArray;
 		ins=ins.asArray;
-		tags.postln;
 		tags=tags.asArray;
 		// calculate rates
 		fftsize=defaultargs[\fftsize]?2048;
@@ -37,6 +36,7 @@ MIDetectorManager {
 		// Create window if not given
 		if(win.isNil,{this.makeWindow()});
         // GUI
+		win.background=Color.white;
         this.makeMainGui();
         this.makeNetGui();
         win.view.decorator.nextLine;
