@@ -43,7 +43,8 @@ void draw() {
       vertex(x2, y2);
     }
     onset = false;
-  } else {
+  } 
+  else {
     for (float i = 0; i <= TWO_PI; i+=0.098) {
       float x2 = 200 * cos( i )*bandsValues[ceil(i)];
       float y2 = 200 * sin( i )*bandsValues[ceil(i)];

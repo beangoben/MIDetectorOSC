@@ -7,17 +7,6 @@ OscP5 oscP5;
 
 boolean printOSCMessage = false;
 
-float freq;
-float amp;
-
-float ampStep;
-float freqStep;
-
-boolean onset;
-
-float valFFcrest;
-float valSpecflat;
-
 void oscSetup() {
   //oSC INICIALIZATION  
   oscP5 = new OscP5(this, 32000);
@@ -25,7 +14,7 @@ void oscSetup() {
   //CONECT THE MESSAGESS INCOMMING FORM SUPERCOLLIDER 
   //TO A FUNTION IN PROCESSING
   oscP5.plug(this, "FTCrestResponse", "/ftcrest");
-  oscP5.plug(this, "SpecflatResponse", "/specflat");
+  oscP5.plug(this, "flatResponse", "/flat");
 }
 
 
@@ -41,11 +30,15 @@ void oscEvent(OscMessage theOscMessage) {
 }
 
 public void FTCrestResponse(int id, float ftcrest){
-  noisyness = map(ftcrest, 0, 10, 1.0, 0.005);
+  if(!usingFlat){
+    noisyness = map(ftcrest, 2, 7, 0.8, 0.005);
+  }
 }
 
 public void SpecflatResponse(int id, float specflat){
-  noisyness = map(specflat, 0, 1, 0.05, 1.0);
+  if(usingFlat){
+    noisyness = map(specflat, 0, 1, 0.05, 1.0);
+  }
 }
 
 

@@ -9,16 +9,13 @@ boolean printOSCMessage = false;
 
 float freq;
 float amp;
-
-float ampStep;
-float freqStep;
-
 boolean onset;
+int onsetCount;
 
 void oscSetup() {
   //oSC INICIALIZATION  
   oscP5 = new OscP5(this, 32000);
-  
+
   //CONECT THE MESSAGESS INCOMMING FORM SUPERCOLLIDER 
   //TO A FUNTION IN PROCESSING
   oscP5.plug(this, "ampResponse", "/amp");
@@ -39,17 +36,24 @@ void oscEvent(OscMessage theOscMessage) {
 }
 /* Pluggable functions */
 public void ampResponse(int id, float amp) {
-  this.amp = pow(10,map(amp, 0, 1, 0, 1.0));
+  this.amp = map(amp, 0, 1, 0, 1.0);
   if (printOSCMessage)println("Amp:" + id + " " + amp);
 }
 
 public void onsetResponse(int id) {
+  /*if (onsetCount >= 3) {
+   onset = true;
+   onsetCount= 0;
+   }
+   onsetCount++;
+   */
+
   onset = true;
   if (printOSCMessage)println("Onset:" + id);
 }
 
 public void pitchResponse(int id, float pitch) {
-  freq = map(log(pitch), log(80), log(18000), 0, 1.0);
+  freq = log(pitch + 1.0)*7;
   if (printOSCMessage)println("Pitch:" + id + " " + pitch);
 }
 

@@ -1,9 +1,9 @@
 PowerBandsMIDetector : MIDetector{
 	var doNormSum;
 	*new{|win,in=0,tag=0,args=nil|
-		^super.newCopyArgs(win,in,tag,args).init();	
-	}	
-	
+		^super.newCopyArgs(win,in,tag,args).init();
+	}
+
 	init {
 		super.init1();
 		this.initValues();
@@ -45,7 +45,7 @@ PowerBandsMIDetector : MIDetector{
 	makeSpecificGui {
 
 		controls.put(\normsum,Button(win,30@hrow)
-		.states_([["Ns",Color.white,Color.green],["Ns",Color.black,Color.red]])	
+		.states_([["Ns",Color.white,Color.green],["Ns",Color.black,Color.red]])
 		.action_({|butt| doNormSum=(butt.value.booleanValue)})
 		.value_(doNormSum));
 
@@ -58,27 +58,28 @@ PowerBandsMIDetector : MIDetector{
 		if(doStats){this.addStats()};
 		win.setInnerExtent(win.bounds.width,win.bounds.height+hextend);
 	}
-	
+
 	calcData{
 		var index=(0..nchan-1)*datasize;
-		buf.getn(0,datasize*nchan,{|val| 
-			nchan.do({|i| sendvalue[i]=(val[index+i]).mean })
+		//checar esto alrato
+		buf.getn(0,datasize*nchan,{|val|
+			nchan.do({|i| sendvalue[i]=(val[index[0]+i]) })
 		});
 		if(doPlot || doStats){statarr=sendvalue};
 		if(doNormSum){sendvalue=sendvalue.normalizeSum.max(0)};
 		if(doStats){
 			stats[\sum]=statarr.sum;
 			/*
-			stats[\stdev_f]=statarr[0].stdDev(stats[\mean_f]); 
+			stats[\stdev_f]=statarr[0].stdDev(stats[\mean_f]);
 			stats[\mean_p]=statarr[1].mean;
-			stats[\stdev_p]=statarr[1].stdDev(stats[\mean_p]); 
+			stats[\stdev_p]=statarr[1].stdDev(stats[\mean_p]);
 			*/
 		};
 
 	}
 
 	updateGui{
-	
+
 		if(doPost){format("% :  % ",name,sendvalue).postln};
 		if(doPlot){
 			controls[\plot].setValue(statarr,findSpecs:false);
@@ -93,5 +94,5 @@ PowerBandsMIDetector : MIDetector{
 		{this.updateGui()}.defer;
 		nets.do({|net| net.sendMsg(oscstr,tag,nchan,sendvalue) });
 	}
-	
+
 }

@@ -24,7 +24,7 @@ void oscSetup() {
   oscP5.plug(this, "ampResponse", "/amp");
   oscP5.plug(this, "onsetResponse", "/onset");
   oscP5.plug(this, "pitchResponse", "/pitch");
-  oscP5.plug(this, "powerResponse", "/power");
+  oscP5.plug(this, "powerResponse", "/powerbands");
 }
 
 
